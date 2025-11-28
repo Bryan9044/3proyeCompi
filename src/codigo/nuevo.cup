@@ -1,0 +1,3049 @@
+package codigo;
+import java_cup.runtime.*;
+import java.lang.String;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.*;
+action code {: 
+    TablaDeFunciones tablaDeFunciones = new TablaDeFunciones();
+    TablaDeSimbolos tablaGlobal = new TablaDeSimbolos("Global"); //
+    TablaDeSimbolos tablaActual = tablaGlobal; //Al principio es la global
+    String funcionActual = "";
+
+    int erroresSemanticos = 0;
+   
+   
+    public void validacionSemanticaAsignacionFor(String tipoIdentificador, String tipoStep, String fila, String columna){
+        if(!(tipoIdentificador.equals(tipoStep))){
+            System.err.println(String.format(
+                "Error Semantico: La variable asignada para el for es de tipo %s. Debe ser de tipo %s. Fila %s columna %s.", 
+                tipoIdentificador, tipoStep, fila, columna 
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }
+    }
+
+
+    public String verificacionAritmeticaDivisionFlotante(String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        boolean tipo1b = true;
+        boolean tipo2b = true;
+
+        if(!(tipo1.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la division en la linea %s columna %s debe ser flotante.", 
+                linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo1b = false;
+        }
+
+        if(!(tipo2.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la division en la linea %s columna %s debe ser flotante.",
+                linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo2b = false;
+        }
+
+        if(tipo1b && tipo2b && tipo1.equals(tipo2)){
+            return tipo1;
+        } else {
+            System.err.println(String.format(
+                "Error Semantico: Ambos operandos en la division de la linea %s deben ser flotantes.",
+                linea1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return "null";
+        }
+    }
+
+    public String verificacionAritmeticaDivisionEntera(String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        boolean tipo1b = true;
+        boolean tipo2b = true;  
+
+        if(!(tipo1.equals("int"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la division entera en la linea %s columna %s debe ser entero.", 
+                linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo1b = false;
+        }
+
+        if(!(tipo2.equals("int"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la division entera en la linea %s columna %s debe ser entero.",
+                linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo2b = false;
+        }
+
+        if(tipo1b && tipo2b && tipo1.equals(tipo2)){
+            return tipo1;
+        } else {
+            System.err.println(String.format(
+                "Error Semantico: Ambos operandos en la division de la linea %s deben ser enteros.",
+                linea1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return "null";
+        }
+    }
+
+
+    //Se crea una nueva tabla de símbolos
+    public TablaDeSimbolos crearTablaDeSimbolos(String nombre){
+        return new TablaDeSimbolos(nombre);
+    }
+    
+    //Le coloca a la tabla que se pase como parametro la actual como anterior, y coloca la del parámetro de entrada como actual
+    public void apilarNuevaTablaDeSimbolos(TablaDeSimbolos pTablaDeSimbolos){
+        //La tabla actual la coloco como la anterior de la recibida en la entrada
+        pTablaDeSimbolos.setTablaAnterior(tablaActual);
+        
+        //Coloco la tabla de la entrada como la nueva
+        tablaActual = pTablaDeSimbolos;
+    }
+
+    //Coloca la tabla anterior a la actual como la nueva tabla actual
+    public void desapilarTablaDeSimbolos(){
+        
+        TablaDeSimbolos tablaAnterior = tablaActual.getTablaAnterior();
+        if(tablaAnterior != null){
+            
+            tablaActual = tablaAnterior; //Con esto ya no hay referencia a la primera tabla de la pila
+            
+        }else{
+            System.err.println("Error: Se está intentando desapilar la tabla Global");
+        }
+    }
+
+    //Añade a la tabla actual el símbolo indicado. VERIFICAR SI EL SÍMBOLO YA ESTÁ EN LA TABLA ACTUAL.
+    public void agregarSimbolo(String pTipo, String pSimbolo){
+        
+        tablaActual.agregarSimbolo(new Simbolo(pSimbolo, pTipo));
+    }
+
+    //Añade a la tabla actual el símbolo indicado. VERIFICAR SI EL SÍMBOLO YA ESTÁ EN LA TABLA ACTUAL.
+    public void agregarSimboloArray(String pTipo, String pSimbolo, String pTamanio, ArrayList<Simbolo> pElementosArreglo){
+        
+        tablaActual.agregarSimbolo(new SimboloArreglo(pSimbolo, pTipo, pTamanio, pElementosArreglo));
+    }
+    
+    //Busca en la jerarquía de tablas el símbolo de la entrada y lo retorno si existiera
+    public Simbolo buscarSimbolo(String pSimbolo){
+        return tablaActual.obtenerSimbolo(pSimbolo);
+    }
+
+    //Reporta el error de que ese id no existe en la tabla
+    public void reportarErrorNoExisteSimbolo(String pSimbolo){
+        Simbolo simbolo = buscarSimbolo(pSimbolo);
+        if(simbolo == null){
+            System.err.println("Error Semantico: El identificador " + pSimbolo + " no ha sido declarado previamente");
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }
+    }
+
+    public String verifiacionSemanticaAritmeticaBinaria(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        boolean tipo1b = true;
+        boolean tipo2b = true;
+
+        if(!(tipo1.equals("int") || tipo1.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la %s en la linea %s columna %s debe ser entero o flotante.", 
+                operacion, linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo1b = false;
+        }
+
+        if(!(tipo2.equals("int") || tipo2.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la %s en la linea %s columna %s debe ser entero o flotante.",
+                operacion, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo2b = false;
+        }
+
+        if(tipo1b && tipo2b && tipo1.equals(tipo2)){
+            return tipo1;
+        } else {
+            System.err.println(String.format(
+                "Error Semantico: Ambos operandos en la %s de la linea %s deben ser enteros o flotantes.",
+                operacion, linea1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return "null";
+        }
+    }
+    
+    //Esto es para cuando se quiere hacer arreglo[i+2] = 5*1$
+    public void agregarElementoArregloPosicionEspecifica(String nombreArreglo, int linea, String tipoPosicion, String tipoElementoAsignado, String posicionArreglo, String elementoAsignado){
+        //Verificar que el identificador exista,
+        int a = 0;
+        Simbolo simbolo = buscarSimbolo(nombreArreglo);
+        if(simbolo == null){
+            System.err.println("Error Semantico: El identificador " + nombreArreglo + " no ha sido declarado previamente. Linea " + linea);
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }else{
+            //Verificar que el identificador sea un arreglo
+            if(simbolo.getTipo().equals("arrayChar") | simbolo.getTipo().equals("arrayInt")){
+                //Verificar que el tipo de la expresión que me indica la posición sea entero
+                if(!(tipoPosicion.equals("int"))){
+                    System.err.println("Error Semantico: La expresion que indica la posicion donde se asignara el elemento en el arreglo " + nombreArreglo + " debe ser de tipo int. Linea " + linea);
+                    erroresSemanticos++;
+                    parser.erroresSemanticos++;
+                }else{
+                    //Verificar que el tipo del arreglo sea el mismo del elemento que se quiere asignar
+                    if(simbolo.getTipo().toLowerCase().contains(tipoElementoAsignado)) {
+                        //Aquí ya debería de hacer el movimiento y meter el elemento en el arreglo
+                        a = 1;
+                    }else{
+                        System.err.println("Error Semantico: El tipo de la expresion que se quiere agregar al arreglo " + nombreArreglo + " no coincide con el del arreglo. Linea " + linea);
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                        }
+                }  
+            }
+            else{
+                System.err.println("Error Semantico: El tipo del identificador " + nombreArreglo + " no es un arreglo. Linea " + linea);
+                erroresSemanticos++;
+                parser.erroresSemanticos++;
+            }
+        }
+
+        
+    }
+        
+    //Verifica que el identificador exista, que sea un arreglo, que el tipo de la expresión aritmética que me indica la posición sea int y me retorna valor::tipo
+    public String accederElementoDeArreglo(String nombreArreglo, String posicionElemento, String tipoPosicionElemento, int linea, int columna){
+        Simbolo simbolo = buscarSimbolo(nombreArreglo);
+        String retorno = "null::null::" + linea + "::"+columna;
+        if(simbolo == null){
+            System.err.println("Error Semantico: El identificador " + nombreArreglo + " no ha sido declarado previamente. Linea " + linea);
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }else{
+            //Verificar que sea un arreglo
+            if(simbolo.getTipo().equals("arrayChar") | simbolo.getTipo().equals("arrayInt")){
+               //Verificar que el tipo de la expresion que me indica la posición sea int 
+               if(!(tipoPosicionElemento.equals("int"))){
+                    System.err.println("Error Semantico: La expresion que indica la posicion del elemento a tomar en el arreglo " + nombreArreglo + " debe ser de tipo int. Linea " + linea);
+                    erroresSemanticos++;
+                    parser.erroresSemanticos++;
+                }else{
+                        if(simbolo.getTipo().equals("arrayChar")){
+                            retorno = "desconocido::char::" + linea + "::" + columna; //Hay que resolver esto para poder retornar el valor
+                        }else{
+                             retorno = "desconocido::int::" + linea + "::" + columna;
+                        }
+                    }
+            }
+            else{
+                System.err.println("Error Semantico: El tipo del identificador " + nombreArreglo + " no es un arreglo. Linea " + linea);
+                erroresSemanticos++;
+                parser.erroresSemanticos++;
+            }
+        }
+        return retorno;
+    }
+
+    public void agregarFuncion(String pNombre, String pTipo, int linea){
+        boolean agregar = tablaDeFunciones.agregarFuncion(pNombre, pTipo);
+        funcionActual = pNombre;
+        if(!agregar){
+            System.err.println("Error Semantico: Ya existe una funcion llamada " + pNombre + " Linea: " + linea);
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            funcionActual = "";
+        }
+    }
+
+    public void agregarParametro(Simbolo pSimbolo){
+        tablaDeFunciones.agregarSimboloAFuncion(funcionActual, pSimbolo);
+    }
+
+    public String validacionRelacionalNoBoleanos(String operacionTexto , String operacionSimbolo, String operador1 , String operador2 ,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        String retorno = operador1 + operacionSimbolo + operador2 + "::null::" + linea1 + "::" + columna1;
+        //Verificar que ambos sean enteros o flotantes
+        boolean verificacionOperador1 = true;
+        boolean verificacionOperador2 = true;
+
+        if(!(tipo1.equals("int") || tipo1.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la operacion %s en la linea %s columna %s debe ser entero o flotante.", 
+                operacionTexto, linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador1 = false;
+        }
+
+        if(!(tipo2.equals("int") || tipo2.equals("float"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la operacion %s en la linea %s columna %s debe ser entero o flotante.", 
+                operacionTexto, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador2 = false;
+        }
+
+        //Si pasan las verificaciones se resuelve la expresión
+        if(verificacionOperador1 && verificacionOperador2 && (tipo1.equals(tipo2))){
+            retorno = operador1 + operacionSimbolo + operador2 + "::bool::" + linea1 + "::" + columna1; 
+        } else{   System.err.println(String.format(
+                "Error Semantico: Ambos operandos de la operacion %s en la linea %s columna %s debe ser del mismo tipo sean enteros o flotantes.", 
+                operacionTexto, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }
+        return retorno;
+    }
+
+    public String validacionRelacionalConBoleanos(String operacionTexto , String operacionSimbolo, String operador1 , String operador2 ,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        String retorno = operador1 + operacionSimbolo + operador2 + "::null::" + linea1 + "::" + columna1;
+        //Verificar que ambos sean enteros o flotantes
+        boolean verificacionOperador1 = true;
+        boolean verificacionOperador2 = true;
+
+        if(!(tipo1.equals("int") || tipo1.equals("float")|| tipo1.equals("bool"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la operacion %s en la linea %s columna %s debe ser entero, flotante o booleano.", 
+                operacionTexto, linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador1 = false;
+        }
+
+        if(!(tipo2.equals("int") || tipo2.equals("float")|| tipo2.equals("bool"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la operacion %s en la linea %s columna %s debe ser entero, flotante o booleano.", 
+                operacionTexto, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador2 = false;
+        }
+
+        //Si pasan las verificaciones se resuelve la expresión
+        if(verificacionOperador1 && verificacionOperador2 && (tipo1.equals(tipo2))){
+            retorno = operador1 + operacionSimbolo + operador2 + "::bool::" + linea1 + "::" + columna1; 
+        }else{
+            System.err.println(String.format(
+                "Error Semantico: Ambos operandos de la operacion %s en la linea %s columna %s debe ser del mismo tipo sean enteros, flotantes o booleanos.", 
+                operacionTexto, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+        }
+        return retorno;
+    }
+
+    public String validacionLogicaSoloBoleanos(String operacionTexto , String operacionSimbolo, String operador1 , String operador2 ,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        String retorno = operador1 + operacionSimbolo + operador2 + "::null::" + linea1 + "::" + columna1;
+        //Verificar que ambos sean enteros o flotantes
+        boolean verificacionOperador1 = true;
+        boolean verificacionOperador2 = true;
+
+        if(!(tipo1.equals("bool"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la operacion %s en la linea %s columna %s debe ser booleano.", 
+                operacionTexto, linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador1 = false;
+        }
+
+        if(!(tipo2.equals("bool"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la operacion %s en la linea %s columna %s debe ser booleano.", 
+                operacionTexto, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            verificacionOperador2 = false;
+        }
+
+        //Si pasan las verificaciones se resuelve la expresión
+        if(verificacionOperador1 && verificacionOperador2){
+            retorno = operador1 + operacionSimbolo + operador2 + "::bool::" + linea1 + "::" + columna1; 
+        }
+        return retorno;
+    }
+
+    public boolean validacionAsignacion(String identificador, String tipoIdentificador, String tipoExpresion, String linea, String columna){
+        if(!(tipoIdentificador.equals(tipoExpresion))){
+            System.err.println(String.format(
+                "Error Semantico: El identificador %s en la linea %s columna %s es de tipo %s y se le esta intentando asignar una expresion de tipo %s.", 
+                identificador, linea, columna, tipoIdentificador, tipoExpresion 
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return false;
+        }
+        return true; //Pasa la validacion
+    }
+
+    public boolean validacionReasignacion(String identificador, String tipoExpresion, String linea, String columna){
+        
+        Simbolo simbolo =  tablaActual.obtenerSimbolo(identificador);
+        if(simbolo != null){
+            if(!(simbolo.getTipo().equals(tipoExpresion))){
+            System.err.println(String.format(
+                "Error Semantico: El identificador previamente declarado %s es de tipo %s y se le esta intentando asignar una expresion de tipo %s en la linea %s columna %s.", 
+                identificador, simbolo.getTipo(), tipoExpresion, linea, columna
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return false;
+            }else{
+                 return true; //Pasa la validacion
+            }
+       
+        }else{
+            System.err.println("Error Semantico: El identificador " + identificador + " no ha sido declarado previamente. Linea "+ linea);
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return false;
+        }
+        
+    }
+
+
+
+
+    
+:}
+
+parser code {:
+    public static int syntaxErrors = 0;
+    public static int erroresSemanticos = 0;
+    
+    public void syntax_error(Symbol s) {
+        syntaxErrors++;
+        System.err.println("\n ERROR DE SINTAXIS:");
+        System.err.println("   Linea: " + (s.left+1));
+        System.err.println("   Token inesperado: " + s.value);
+    }
+    
+    public String revisarTemporal(){
+        
+
+        if(codigo.Lexer.hayFloat){
+            String temp = "f" + contadorTemporalFloat;
+            contadorTemporalFloat++;
+            return temp;
+        } else
+        {
+            String temp = "t" + contadorTemporalInt;
+            contadorTemporalInt++;
+            return temp;
+        }
+    }
+
+    public void report_error(String message, Object info) {
+        System.err.println("ERROR: " + message);
+    }
+    
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception {
+        System.err.println("\nERROR FATAL: No se puede recuperar del error de sintaxis");
+        throw new Exception("Error de sintaxis irrecuperable en linea " + (s.left+1));
+    }
+
+    public void sePuedeoNo(){
+        int lexerErrors = codigo.Lexer.errorCount; 
+        int ErroresSemanticos = codigo.parser.erroresSemanticos;
+        if (lexerErrors == 0 && syntaxErrors == 0 && ErroresSemanticos == 0) {
+            System.out.println("La gramatica si puede ser generada");
+        }
+        else {
+            System.out.println("La gramatica no puede ser generada");
+            System.out.println("Numero de errores en el lexer: " + lexerErrors); 
+            System.out.println("Numero de errores en el parser: " + syntaxErrors);
+            System.out.println("Numero de errores semanticos: " + ErroresSemanticos);
+        }
+    }
+
+
+
+// Funciones que se necesitan para el código de tres direcciones
+
+    int contadorTemporalINT = 1;
+    int contadorTemporalINTG = 1; // Este va a ser solo como para direcciones
+    int contadorTemporalFLOAT = 1;
+    int contadorTemporalFLOATG = 1; // Este va a ser solo para direcciones de float 
+
+
+
+    int contadorBloque = 1;
+    int contadorIF = 1;
+    int encabezado = 1;
+    int contadorFor = 1;
+    boolean UltimoElif = false;
+    boolean existeElif = false;
+    int contadorFuncINT = 1;
+    int contadorFuncFLOAT = 1;
+    int contadorFuncCHAR = 1;
+    int contadorFuncSTRING = 1;
+    int contadorFuncBOOL = 1;
+    int contadorFuncVOID = 1;
+    StringBuffer C3D = new StringBuffer();
+
+
+    boolean funcFloat = false;
+    boolean funcInt = false;
+    boolean funcChar = false;
+    boolean funcString = false;
+    boolean funcBool = false;
+    boolean funcVoid = false;
+    
+    public String registroTemporalI()
+    {
+        String temp = "t" + contadorTemporalINT;
+        contadorTemporalINT++;
+        return temp;
+    }
+
+    public String registroTemporalF(){
+        String temp = "f" + contadorTemporalFLOAT;
+        contadorTemporalFLOAT++;
+        return temp;
+    }
+
+
+    // Esto puede ser que lo quuite 
+    // Porque no sé si el break va en el decide of 
+    ArrayList<String> direccionesBreak = new ArrayList<>();
+    public void AgregarDireccion(String direccion) {
+        direccionesBreak.add(direccion);
+        
+    }
+
+    public String obtenerDireccionActual() {
+        if (!direccionesBreak.isEmpty()) {
+            return direccionesBreak.get(direccionesBreak.size() - 1);
+        } else {
+            System.err.println("Error Semantico: break fuera de estructura de control");
+            return "ERROR";
+        }
+    }
+
+    public void eliminarDireccionBreak() {
+        if (!direccionesBreak.isEmpty()) {
+            String direccion = direccionesBreak.remove(direccionesBreak.size() - 1);
+            
+        }
+    }
+
+
+    public DatoT crearDatoT(String tipo, String lexema, String direccion){
+        return new DatoT(tipo, lexema, direccion); 
+    }
+
+    public String empiezaFunc(String nombreFuncion){
+        return nombreFuncion + ":\n";
+    }
+
+    public String terminaFunc(String nombreFuncion){
+        return nombreFuncion + "_end:\n";
+    }
+
+    public String mostrarVariable(String tipo, String nombre){
+        return "data_ " + tipo + " " + nombre + ";\n";
+    }
+
+    public String crearParam(String tipo, String valor){
+        return "param " + tipo + " " + valor + ";\n"; 
+    }
+
+    public void mostrarCodigo3Direcciones(){
+        int lexerErrors = codigo.Lexer.errorCount;
+        int syntaxErrors = codigo.parser.syntaxErrors;
+        int ErroresSemanticos = codigo.parser.erroresSemanticos;
+        if(lexerErrors > 0 || syntaxErrors > 0 || ErroresSemanticos > 0){
+            System.out.println("No se puede generar el código de tres direcciones ya que todavía hay errores en el sistema.");
+            return;
+        }
+        String codigo = C3D.toString();
+
+        try {
+            java.nio.file.Path out = java.nio.file.Paths.get("Codigo3Direcciones.txt");
+            java.nio.file.Files.write(out, codigo.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            System.out.println("C3D guardado en: " + out.toAbsolutePath());
+        } catch (IOException e) {
+            System.out.println("Se cayó la progra");
+            e.printStackTrace();
+        }
+        System.out.println("Código de tres direcciones generado:");
+        System.out.println(C3D.toString());
+    }
+
+    public boolean esLiteral(String valor){
+        if(!valor.matches("t[0-9]+")){
+            return true; // seria literal
+        }
+        else {
+            return false; // sino
+        }
+    }
+
+    public boolean esLiteralVerdadero(String valor){
+        return valor.matches("^-?\\d+(\\.\\d+)?$")  || valor.matches("^'.'$")               
+            || valor.matches("^\".*\"$") || valor.matches("^(True|False)$");     
+    }
+
+
+    public boolean esBool(String valor){
+        if(!valor.matches("True|False")){
+            return true; // seria booleano
+        }
+        else {
+            return false; // sino
+        }
+    }
+
+    public boolean esChar(String valor){
+        if(!valor.matches("'[a-zA-Z]'")){
+            return true; // seria char
+        }
+        else {
+            return false; // sino
+        }
+    }
+
+    public boolean esString(String valor){
+        if(!valor.matches("\"[^\"]*\"")){
+            return true; // seria string
+        }
+        else {
+            return false; // sino
+        }
+    }
+
+    public String veoTipo(String valor) {
+        if (valor.equals("float")) {
+            return registroTemporalF();
+        } else {
+            return registroTemporalI();
+        }
+    }
+
+
+
+    public boolean esTemporal(String valor){
+        if (valor.matches("t[0-9]+")){
+            return true; 
+        }
+        else {
+            return false;
+        }
+    }
+
+    int[] array = {1,2,3,4,5,7,8,9};
+
+
+    public boolean continuouNo(String valor){
+        if (valor.matches("t[0-9]+")){
+            
+            return true; 
+        }
+    
+
+        
+        
+        for (int i : array) {
+            if (valor.equals(String.valueOf(i))) {
+
+                return false;
+            }
+        }
+        return false;
+    }
+    public boolean continuoLogico(String valor){
+        if(valor.matches("[0-9]>=|<=|==|!=|>|<[0-9]+")){
+            return true; // o sea es algo como 5 > 3
+        }
+        // Si no entonces es un temporal como t1 > t2
+        else {
+            return false;
+        }
+    }
+    
+
+
+
+
+//////////////////////////////////////////////////////////
+
+
+:};
+
+// TERMINALES
+terminal String left_parenthesis;
+terminal String right_parenthesis;
+terminal String left_block;
+terminal String right_block;
+terminal String right_bracket;
+terminal String left_bracket;
+
+terminal String plus_operator;
+terminal String minus_operator;
+terminal String multiplication_operator;
+terminal String division_operator;
+terminal String int_division_operator;
+terminal String modulo_operator;
+terminal String power_operator;
+terminal String increment_operator;
+terminal String decrement_operator;
+terminal String assignment_operator;
+
+
+terminal String int_keyword;
+terminal String float_keyword;
+terminal String bool_keyword;
+terminal String char_keyword;
+terminal String string_keyword;
+terminal String void_keyword;
+terminal String principal_keyword;
+terminal String let_keyword;
+terminal String input_keyword;
+terminal String output_keyword;
+terminal String comma_keyword;
+terminal String loop_keyword;
+terminal String exit_keyword;
+terminal String when_keyword;
+terminal String end_keyword;
+terminal String for_keyword;
+terminal String step_keyword;
+terminal String to_keyword;
+terminal String downto_keyword;
+terminal String do_keyword;
+terminal String return_keyword;
+terminal String break_keyword;
+terminal String greater_operator;
+terminal String less_operator;
+terminal String greater_equal_operator;
+terminal String less_equal_operator;
+terminal String equal_operator;
+terminal String not_equal_operator;
+terminal String delimiter;
+terminal String or_operator;
+terminal String and_operator;
+terminal String not_operator;
+terminal String decide_keyword;
+terminal String of_keyword;
+terminal String else_keyword;
+terminal String int_literal;
+terminal String float_literal;
+terminal String bool_literal;
+terminal String CHAR_LITERAL;
+terminal String STRING_LITERAL;
+terminal String identifier;
+
+
+// NO TERMINALES
+// Expresiones aritméticas
+non terminal unary_negative;
+non terminal postfix_expression;
+non terminal  arithmetic_expression;
+non terminal  term;
+non terminal  power;
+non terminal  factor;
+non terminal  arithmetic_operands;
+
+// Expresiones lógicas y relacionales
+non terminal logical_expresion_or;
+non terminal logical_expresion_and;
+non terminal relational_expression;
+
+// Declaraciones y sentencias
+non terminal declaration_values;
+non terminal declaration;
+
+non terminal reassignment;
+non terminal array_declaration;
+non terminal assign_elements_array;
+non terminal array_access;
+non terminal statement;
+non terminal statements;
+non terminal block;
+
+// Funciones input y output
+non terminal input_statement;
+non terminal output_statement;
+
+// Bucles y condicionales
+non terminal loop;
+non terminal loop_left;
+non terminal for_loop;
+non terminal for_loop_left;
+non terminal loop_content;
+non terminal break_statement;
+non terminal decide_of;
+non terminal decide_of_left;
+non terminal decide_of_left_and_content;
+non terminal elif_list;
+non terminal elif_part;
+non terminal elif_part_left;
+non terminal else_part_left;
+non terminal else_part;
+
+
+
+
+non terminal array_literals;
+
+
+
+
+// Funciones
+non terminal function;
+non terminal function_left;
+non terminal functions;
+non terminal params;
+non terminal param;
+non terminal params_tail;
+non terminal return_statement;
+non terminal function_call;
+non terminal args;
+
+
+// Programa principal
+non terminal principal;
+non terminal principal_left;
+non terminal global_variables;
+non terminal program;
+
+// los nuevos
+non terminal decide_of_helper;
+non terminal elif_helper;
+non terminal else_helper;
+non terminal loop_helper;
+non terminal for_helperInicio;
+non terminal function_helper;
+non terminal function_helperF;
+non terminal function_helperB;
+non terminal function_helperC;
+non terminal function_helperS;
+
+
+// Por úlitmo un orden precendencia para el cup
+precedence left or_operator; // ~
+precedence left and_operator; // @
+precedence right not_operator; // Σ
+precedence nonassoc equal_operator, not_equal_operator; //==, !=
+precedence nonassoc greater_operator, less_operator, greater_equal_operator, less_equal_operator; // >, <, >=, <=
+precedence left plus_operator, minus_operator; // +, -
+precedence left multiplication_operator, division_operator, int_division_operator, modulo_operator; // *, /, //, %
+precedence right power_operator; // ^
+precedence right increment_operator, decrement_operator; // ++, --
+//ESTOS LOS PODEMOS REVISAR PARA VER SI LOS UNARIOS TAMBIÉN VAN
+
+
+
+// El start siempre después de los terminales y no terminales
+start with program;
+
+
+//Expresiones aritméticas
+
+
+arithmetic_expression ::= arithmetic_expression:e1 plus_operator term:e2
+                          {:  
+                               String[] partesE1 = e1.toString().split("::"); 
+                               String[] partesE2 = e2.toString().split("::");
+                            String verificacion = verifiacionSemanticaAritmeticaBinaria("suma", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+
+                            String sumaiz = partesE1[0]; // parte izquierda de la suma
+                            String sumader = partesE2[0]; // parte derecha de la suma
+                            
+                            // revisamos si la parte izq es temporal  
+                            if(!esTemporal(sumaiz) && esLiteralVerdadero(sumaiz)){ 
+                                String tempIzq = veoTipo(verificacion);
+                                C3D.append("\n" + tempIzq + " = " + sumaiz + ";\n");
+                                sumaiz = tempIzq;
+                            }
+                            
+                            if(!esTemporal(sumader) && esLiteralVerdadero(sumader)){ 
+                                String tempDer = veoTipo(verificacion);
+                                C3D.append("\n" + tempDer + " = " + sumader + ";\n");
+                                sumader = tempDer;
+                            }
+                            String temp = veoTipo(verificacion);
+                            C3D.append("\n" + temp + " = " + sumaiz + " + " + sumader + ";\n");
+
+                            RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+                            
+                          :}
+                       | arithmetic_expression plus_operator error
+                       {: System.err.println("Error:En la expresión aritmética después de +"); RESULT = "null::null::-1::-1";:}
+                       |  arithmetic_expression:e1 minus_operator term:e2
+                          {: 
+                            String[] partesE1 = e1.toString().split("::");
+                            String[] partesE2 = e2.toString().split("::");
+                            String verificacion = verifiacionSemanticaAritmeticaBinaria("resta", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+       
+
+                            String restaIzq = partesE1[0]; // parte izquierda de la resta
+                            String restaDer = partesE2[0]; // parte derecha de la resta
+                            if(!esTemporal(restaIzq) && esLiteralVerdadero(restaIzq)){ 
+                                String tempIzq = veoTipo(verificacion);
+                                C3D.append("\n" + tempIzq + " = " + restaIzq + ";\n");
+                                restaIzq = tempIzq;
+                            }
+                            
+                            if(!esTemporal(restaDer) && esLiteralVerdadero(restaDer)){ 
+                                String tempDer = veoTipo(verificacion);
+                                C3D.append("\n" + tempDer + " = " + restaDer + ";\n");
+                                restaDer = tempDer;
+                            }
+
+                            String temp = veoTipo(verificacion);
+                            C3D.append("\n" + temp + " = " + restaIzq + " - " + restaDer + ";\n");
+
+
+                            // FALTA AGREGARLO EN RESULT
+                            RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+                          :}
+                       | arithmetic_expression minus_operator error
+                       {: System.err.println("Error:En la expresión aritmética después de -");  RESULT = "null::null::-1::-1";:}
+                       |  term:e {: RESULT = e;:}
+                       ;
+
+term ::= term:e1 multiplication_operator power:e2
+      {: 
+        String[] partesE1 = e1.toString().split("::");
+        String[] partesE2 = e2.toString().split("::");
+        
+        String verificacion = verifiacionSemanticaAritmeticaBinaria("multiplicacion", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+       
+        String mulIzq = partesE1[0]; // parte izquierda de la multiplicacion
+        String mulDer = partesE2[0]; // parte derecha de la multiplicacion
+        if(!esTemporal(mulIzq) && esLiteralVerdadero(mulIzq)){ 
+            String tempIzq = veoTipo(verificacion);
+            C3D.append("\n" + tempIzq + " = " + mulIzq + ";\n");
+            mulIzq = tempIzq;
+        }
+        
+        if(!esTemporal(mulDer) && esLiteralVerdadero(mulDer)){ 
+            String tempDer = veoTipo(verificacion);
+            C3D.append("\n" + tempDer + " = " + mulDer + ";\n");
+            mulDer = tempDer;
+        }
+
+        String temp = veoTipo(verificacion);
+        C3D.append("\n" + temp + " = " + mulIzq + " * " + mulDer + ";\n"); 
+
+        RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+        
+      :}
+      |  term:e1 division_operator power:e2
+      {: 
+        String[] partesE1 = e1.toString().split("::");
+        String[] partesE2 = e2.toString().split("::");
+        String verificacion = verificacionAritmeticaDivisionFlotante(partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+
+
+        String divsimpleIzq = partesE1[0]; // parte izquierda de la division
+        String divsimpleDer = partesE2[0]; // parte derecha de la division
+        if(!esTemporal(divsimpleIzq) && esLiteralVerdadero(divsimpleIzq)){ 
+            String tempIzq = veoTipo(verificacion);
+            C3D.append("\n" + tempIzq + " = " + divsimpleIzq + ";\n");
+            divsimpleIzq = tempIzq;
+        }
+        
+        if(!esTemporal(divsimpleDer) && esLiteralVerdadero(divsimpleDer)){ 
+            String tempDer = veoTipo(verificacion);
+            C3D.append("\n" + tempDer + " = " + divsimpleDer + ";\n");
+            divsimpleDer = tempDer;
+        }
+
+        String temp = veoTipo(verificacion);
+        C3D.append("\n" + temp + " = " + divsimpleIzq + " / " + divsimpleDer + ";\n");
+        RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+      :}
+      |  term:e1 int_division_operator power:e2
+      {: 
+        String[] partesE1 = e1.toString().split("::");
+        String[] partesE2 = e2.toString().split("::");
+        String verificacion = verificacionAritmeticaDivisionEntera(partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+       
+
+        String diventeraIzq = partesE1[0]; // parte izquierda de la division entera
+        String diventeraDer = partesE2[0]; // parte derecha de la division entera
+        if(!esTemporal(diventeraIzq) && esLiteralVerdadero(diventeraIzq)){ 
+            String tempIzq = veoTipo(verificacion);
+            C3D.append("\n" + tempIzq + " = " + diventeraIzq + ";\n");
+            diventeraIzq = tempIzq;
+        }
+        
+        if(!esTemporal(diventeraDer) && esLiteralVerdadero(diventeraDer)){ 
+            String tempDer = veoTipo(verificacion);
+            C3D.append("\n" + tempDer + " = " + diventeraDer + ";\n");
+            diventeraDer = tempDer;
+        }
+
+        String temp = veoTipo(verificacion);
+        C3D.append("\n" + temp + " = " + diventeraIzq + " // " + diventeraDer + ";\n");
+        RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+
+      :}
+      |  term:e1 modulo_operator power:e2
+      {: 
+        String[] partesE1 = e1.toString().split("::");
+        String[] partesE2 = e2.toString().split("::");
+        String verificacion = verifiacionSemanticaAritmeticaBinaria("modulo", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+       
+        String moduloIzq = partesE1[0]; // parte izquierda del modulo entera
+        String moduloDer = partesE2[0]; // parte derecha del moduloentera
+        if(!esTemporal(moduloIzq) && esLiteralVerdadero(moduloIzq)){ 
+            String tempIzq = veoTipo(verificacion);
+            C3D.append("\n" + tempIzq + " = " + moduloIzq + ";\n");
+            moduloIzq = tempIzq;
+        }
+        
+        if(!esTemporal(moduloDer) && esLiteralVerdadero(moduloDer)){ 
+            String tempDer = veoTipo(verificacion);
+            C3D.append("\n" + tempDer + " = " + moduloDer + ";\n");
+            moduloDer = tempDer;
+        }
+
+        String temp = veoTipo(verificacion);
+        C3D.append("\n" + temp + " = " + moduloIzq + " % " + moduloDer + ";\n");
+        RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+
+      :}
+      |  power:e {:  RESULT = e;:}
+      ;
+
+power ::= factor:e1 power_operator power:e2
+       {:  
+            //Voy a dejarlo de igual manera que ambos sean enteros o flotantes
+            String[] partesE1 = e1.toString().split("::");
+            String[] partesE2 = e2.toString().split("::");
+            String verificacion = verifiacionSemanticaAritmeticaBinaria("potencia", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+
+
+        String elevadoIzq = partesE1[0]; // parte izquierda de la potencia
+        String elevadoDer = partesE2[0]; // parte derecha de la potencia
+        if(!esTemporal(elevadoIzq) && esLiteralVerdadero(elevadoIzq)){ 
+            String tempIzq = veoTipo(verificacion);
+            C3D.append("\n" + tempIzq + " = " + elevadoIzq + ";\n");
+            elevadoIzq = tempIzq;
+        }
+        
+        if(!esTemporal(elevadoDer) && esLiteralVerdadero(elevadoDer)){ 
+            String tempDer = veoTipo(verificacion);
+            C3D.append("\n" + tempDer + " = " + elevadoDer + ";\n");
+            elevadoDer = tempDer;
+        }
+
+        String temp = veoTipo(verificacion);
+        C3D.append("\n" + temp + " = " + elevadoIzq + " ^ " + elevadoDer + ";\n");
+        RESULT = temp + "::" + verificacion + "::" + partesE1[2] + "::" + partesE1[3];
+
+        :}
+       |  factor:e {: RESULT = e;:}
+       ;
+
+factor ::= left_parenthesis logical_expresion_and:e right_parenthesis
+        {: RESULT = e;:}
+        |  arithmetic_operands:e {: RESULT = e;:}
+        ;
+
+arithmetic_operands ::= int_literal:n {: RESULT = n + "::int::" + (nleft + 1) + "::" + nright;:}
+                     |  float_literal:n {: RESULT = n + "::float::" + (nleft +1) + "::" + nright; :}
+                     |  identifier:n 
+                    {: 
+                        //Verificar que exista el identificador
+                        reportarErrorNoExisteSimbolo(n);
+                        //Obtener el tipo
+                        Simbolo simbolo = buscarSimbolo(n);
+                        if(simbolo != null){
+                            RESULT =  simbolo.getSimbolo() + "::" + simbolo.getTipo() + "::"  + (nleft +1) + "::" + nright; //valor::tipo::linea::columna
+                        }else{
+                            RESULT = "null::null::" + (nleft + 1) + "::" + nright;
+                            erroresSemanticos++;
+                            parser.erroresSemanticos++;
+                        }
+                    :}
+                     |  unary_negative:n {: RESULT = n; :} 
+                     |  postfix_expression:n {: RESULT = n; :}
+                     |  array_access:n {: RESULT = n; :}
+                     |  function_call:n {: RESULT = n;  :}
+                     |  bool_literal:n {: RESULT = n + "::bool::" + (nleft +1) + "::" + nright;:}
+                     |  not_operator:i logical_expresion_and:e 
+                        {:
+                            //Revisar que la expresión sea booleana
+                            String[] partesExpresion = e.toString().split("::");
+                            if(!(partesExpresion[1].equals("bool"))){
+                                //Error 
+                                System.err.println("Error Semantico: La expresion " + partesExpresion[0] + " debe ser de tipo booleano para poder aplicarle la negacion. Linea "+ (ileft +1));
+                                erroresSemanticos++;
+                                parser.erroresSemanticos++;
+                                RESULT = "Σ"+ partesExpresion[0] + "::null::" + (ileft +1) + "::" + iright;
+                            }else{
+                                RESULT = "/"+ partesExpresion[0] + "::bool::" + (ileft +1) + "::" + iright;
+                            }
+                        :} 
+                     ;
+
+
+                     ///PROBAR CUANDO HAYAN ASIGNACIONES
+unary_negative ::= minus_operator int_literal:n 
+                {:  
+                String temp2 = registroTemporalI();
+                String temp3 = registroTemporalI();
+                String temp = registroTemporalI();
+                    C3D.append("\n" + temp2 + "=" + "-1" + "\n");
+                    C3D.append("\n" + temp3 + " = " +  n + "\n");
+                    
+                    C3D.append("\n" + temp + " = " +  temp3 + "*"  + temp2 + ";\n");
+
+                    RESULT = temp + "::int::" + (nleft +1) + "::" + nright;
+                :}
+                |  minus_operator float_literal:n
+                    {: 
+                    String temp = registroTemporalF();
+                    C3D.append("\n" + temp + " = " + " - " + n + ";\n");
+                        RESULT = temp  + "::float::" + (nleft +1) + "::" + nright;
+                    :}
+                ;
+
+                //FALTA ASIGNACIONES
+postfix_expression ::= identifier:n increment_operator 
+                        {: 
+                            //Verificar que el identificador sea entero o flotante
+                            //Verificar que exista el identificador
+                            reportarErrorNoExisteSimbolo(n);
+                            //Obtener el tipo
+                            Simbolo simbolo = buscarSimbolo(n);
+                            String tipo;
+                            String temp2;
+                            String temp;
+                            if(simbolo != null){
+                                
+                                
+                                tipo = simbolo.getTipo();
+                                if(tipo.equals("int") || tipo.equals("float")){
+                                    if (tipo.equals("float")){
+                                        temp2 = registroTemporalF();
+                                        temp = registroTemporalF();
+                                    } else {
+                                        temp2 = registroTemporalI();
+                                        temp = registroTemporalI();
+                                    }
+                                    C3D.append("\n" + temp2 + " = " + "1\n");
+                                    C3D.append("\n" + temp + " = " + simbolo.getSimbolo() + " + " + temp2 + ";\n");
+                                    
+                                    RESULT =  temp + "::" + simbolo.getTipo() + "::"  + (nleft +1) + "::" + nright; 
+                                }else{
+                                    //Reportar el error
+                                   System.err.println(String.format(
+                                    "Error Semantico: El identificador para la operacion de incremento postfijo en la linea %s columna %s debe ser entero o flotante.", 
+                                    (nleft +1), nright
+                                    ));
+                                    erroresSemanticos++;
+                                    parser.erroresSemanticos++;
+                                    RESULT = "null::null::" + (nleft + 1) + "::" + nright;
+                                }
+                            }else{
+                                RESULT = "null::null::" + (nleft + 1) + "::" + nright;
+                            }
+                        :}
+                    |  identifier:n decrement_operator {: 
+                        //Verificar que el identificador sea entero o flotante
+                            //Verificar que exista el identificador
+                            reportarErrorNoExisteSimbolo(n);
+                            //Obtener el tipo
+                            Simbolo simbolo = buscarSimbolo(n);
+                            String tipo;
+                            String temp2;
+                            String temp;
+                            if(simbolo != null){
+                                
+                                //Verificar que sea entero o flotante
+                                tipo = simbolo.getTipo();
+                                if(tipo.equals("int") || tipo.equals("float")){
+                                    if (tipo.equals("float")){
+                                        temp2 = registroTemporalF();
+                                        temp = registroTemporalF();
+                                    } else {
+                                        temp2 = registroTemporalI();
+                                        temp = registroTemporalI();
+                                    }
+                                    C3D.append("\n" + temp2 + " = " + "1\n");
+                                    C3D.append("\n" + temp + " =  " + simbolo.getSimbolo() + " - " + temp2 + ";\n");
+                                    RESULT = temp + "::" + simbolo.getTipo() + "::"  + (nleft +1) + "::" + nright; 
+                                }else{
+                                    //Reportar el error
+                                   System.err.println(String.format(
+                                    "Error Semantico: El identificador para la operacion de decremento postfijo en la linea %s columna %s debe ser entero o flotante.", 
+                                    (nleft +1), nright
+                                    ));
+                                    erroresSemanticos++;
+                                    parser.erroresSemanticos++;
+                                    RESULT = "null::null::" + (nleft + 1) + "::" + nright;
+                                }
+                            }else{
+                                RESULT = "null::null::" + (nleft + 1) + "::" + nright;
+                            }
+                    
+                        :}
+                    ;
+
+// Expresiones logicas and, or y negación
+
+logical_expresion_and ::= logical_expresion_and:e1 and_operator logical_expresion_or:e2
+            {:  
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String parteIzq2;
+                if (partesE1.length > 4) {
+                    parteIzq2 = partesE1[4];  // Esto es porque si son varias operaciones tipo  5 > 3 ~ 2 < 4 entonces puede pasar a la parte donde ya mando todo eso
+                } else { // sino quiere decir que es algo básico o pequeño por lo tanto es más sencillo que y evita el error de salirme del rango
+                    parteIzq2 = partesE1[0];
+                }
+
+                String parteDer2;
+                if (partesE2.length > 4) {
+                    parteDer2 = partesE2[4];
+                } else {
+                    parteDer2 = partesE2[0];
+                }
+                
+            
+                String validacion = validacionLogicaSoloBoleanos("AND", "@", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+
+                if(!esTemporal(parteIzq2) && esLiteralVerdadero(parteIzq2)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq2 + ";\n");
+                    parteIzq2 = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer2) && esLiteralVerdadero(parteDer2)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer2 + ";\n");
+                    parteDer2 = tempDer;
+                }
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq2 + " @ " + parteDer2 + ";\n");            
+                RESULT = validacion + "::" + temp;
+
+            :}
+            |  logical_expresion_or:e {: RESULT = e; :}//Creo que aquí debería solo puede ser booleano:}
+            ;
+
+logical_expresion_or ::= logical_expresion_or:e1 or_operator relational_expression:e2
+            {:  
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionLogicaSoloBoleanos("OR", "~", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq2;
+                if (partesE1.length > 4) {
+                    parteIzq2 = partesE1[4];  // Esto es porque si son varias operaciones tipo  5 > 3 ~ 2 < 4 entonces puede pasar a la parte donde ya mando todo eso
+                } else { // sino quiere decir que es algo básico o pequeño por lo tanto es más sencillo que y evita el error de salirme del rango
+                    parteIzq2 = partesE1[0];
+                }
+
+                String parteDer2;
+                if (partesE2.length > 4) {
+                    parteDer2 = partesE2[4];
+                } else {
+                    parteDer2 = partesE2[0];
+                }
+
+                if(!esTemporal(parteIzq2) && esLiteralVerdadero(parteIzq2)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq2 + ";\n");
+                    parteIzq2 = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer2) && esLiteralVerdadero(parteDer2)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer2 + ";\n");
+                    parteDer2 = tempDer;
+                }
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq2 + " ~ " + parteDer2 + ";\n");            
+                RESULT = validacion + "::" + temp;
+
+            :}
+            |  relational_expression:e {: RESULT = e; :}
+
+            ;
+//Expresiones relacionales. Ya no va a aceptar expresiones tipo x24 >= var > 5.6
+relational_expression ::= arithmetic_expression:e1 greater_operator arithmetic_expression:e2
+            {: 
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalNoBoleanos("mayor que", ">", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " > " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;
+
+            :}
+            |  arithmetic_expression:e1 less_operator arithmetic_expression:e2
+            {: 
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalNoBoleanos("menor que", "<", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " < " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;           
+
+            :}
+            |  arithmetic_expression:e1 greater_equal_operator arithmetic_expression:e2
+            {: 
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalNoBoleanos("mayor o igual que", ">=", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }                
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " >= " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;
+                
+            :}
+            |  arithmetic_expression:e1 less_equal_operator arithmetic_expression:e2
+            {: 
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalNoBoleanos("menor o igual que", "<=", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }                
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " <= " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;
+    
+            :}
+            |  arithmetic_expression:e1 equal_operator arithmetic_expression:e2
+            {: 
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalConBoleanos("igual que", "==", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }         
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " == " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;
+      
+            :}
+            |  arithmetic_expression:e1 not_equal_operator arithmetic_expression:e2
+            {:  
+                String[] partesE1 = e1.toString().split("::");
+                String[] partesE2 = e2.toString().split("::");
+                String validacion = validacionRelacionalConBoleanos("diferente que", "!=", partesE1[0] , partesE2[0] ,partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+                String parteIzq = partesE1[0];
+                String parteDer = partesE2[0];
+
+                if(!esTemporal(parteIzq) && esLiteralVerdadero(parteIzq)){ 
+                    String tempIzq = registroTemporalI();
+                    C3D.append("\n" + tempIzq + " = " + parteIzq + ";\n");
+                    parteIzq = tempIzq;
+                }
+                
+                if(!esTemporal(parteDer) && esLiteralVerdadero(parteDer)){ 
+                    String tempDer = registroTemporalI();
+                    C3D.append("\n" + tempDer + " = " + parteDer + ";\n");
+                    parteDer = tempDer;
+                }         
+                String temp = registroTemporalI();
+                C3D.append("\n" + temp + " = " + parteIzq + " != " + parteDer + ";\n"); 
+                RESULT = validacion + "::" + temp;
+            :}
+	    | arithmetic_expression:e {:  RESULT = e; :}
+            ;
+            
+//Declaraciones. Se salvan los valores tanto el de la expresión lógica que viene de todo un proceso de reducción para el tipo y los literales
+declaration_values ::= logical_expresion_and:e {: RESULT = e; :} | CHAR_LITERAL:e {: RESULT = e + "::char::" + (eleft + 1) + "::" + eright; :} | STRING_LITERAL:e {: RESULT = e + "::string::" + (eleft + 1) + "::" + eright; :};
+     
+declaration ::= let_keyword int_keyword identifier:id delimiter
+             {:  agregarSimbolo("int", id); C3D.append("\n" + "data_int " + id + ":\n");:}
+             
+             |  let_keyword float_keyword identifier:id delimiter
+             {:  agregarSimbolo("float", id); C3D.append("\n" + "data_float " + id + ":\n");:}
+             |  let_keyword bool_keyword identifier:id delimiter
+             {:  agregarSimbolo("bool", id); C3D.append("\n" + "data_bool " + id + ":\n");:}
+             |  let_keyword char_keyword identifier:id delimiter
+             {:  agregarSimbolo("char", id); C3D.append("\n" + "data_char " + id + ":\n");:}
+             |  let_keyword string_keyword identifier:id delimiter
+             {:  agregarSimbolo("string", id); C3D.append("\n" + "data_string " + id + ":\n");:}
+
+             |  let_keyword int_keyword identifier:id assignment_operator declaration_values:e delimiter
+             {: 
+                /// Preguntarle al profe sobre esto 
+                
+                //Verificar si el tipo de la expresión coincide con el del identificador
+                 String[] partesOperador = e.toString().split("::");
+                if(validacionAsignacion(id, "int", partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright))){
+                    agregarSimbolo("int", id);
+                }
+                
+                String parteUnica = partesOperador[0];
+               
+
+                // Si es literal, creamos un temporal
+                if (esLiteral(parteUnica)) {
+                    String tempLiteral = registroTemporalI();
+                    C3D.append("\n" + tempLiteral + " = " + parteUnica + ";\n");
+                    parteUnica = tempLiteral; 
+                } 
+                // Si NO es literal pero TAMPOCO es temporal, generamos uno extra
+                else if (!esTemporal(parteUnica)) {
+                    String tempExtra = registroTemporalI();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                // Ya con parteUnica siendo el temporal final:
+                C3D.append("\n" + "data_int " + id + ":\n");
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+
+
+            :}
+             |  let_keyword float_keyword identifier:id assignment_operator declaration_values:e delimiter
+             {:  
+
+                //Verificar si el tipo de la expresión coincide con el del identificador
+                 String[] partesOperador = e.toString().split("::");
+                if(validacionAsignacion(id, "float", partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright))){
+                    agregarSimbolo("float", id);
+                }
+                String parteUnica = partesOperador[0];
+                
+
+                // Si es un numero siempre hacemos temporal
+                if (esLiteral(parteUnica)) {
+                    String tempLiteral = registroTemporalF();
+                    C3D.append("\n" + tempLiteral + " = " + parteUnica + ";\n");
+                    parteUnica = tempLiteral; 
+                } 
+                
+                // si es un temporal entonces lo asigno de una vez 
+                else if (!continuouNo(parteUnica)) {
+                    String tempExtra = registroTemporalF();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                // asignamos su id y lo mostramos
+                C3D.append("\n" + "data_float " + id + ":\n");
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+
+            :}
+             |  let_keyword bool_keyword identifier:id assignment_operator declaration_values:e delimiter
+             {:  
+                 //Verificar si el tipo de la expresión coincide con el del identificador
+                 String[] partesOperador = e.toString().split("::");
+                if(validacionAsignacion(id, "bool", partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright))){
+                    agregarSimbolo("bool", id);
+                }
+                String parteUnica;
+                if (partesOperador.length > 4) {
+                    // es una op anidada entonces se empieza a tomar desde ahí
+                    parteUnica = partesOperador[4];
+                } else {
+                    // sino entonces sigue siendo un numero 
+                    parteUnica = partesOperador[0];
+                }
+                
+                
+
+                // Solo creamos un temporal sino es un temporal 
+                if (!continuouNo(parteUnica)) {
+                    String tempExtra = registroTemporalI();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                C3D.append("\n" + "data_bool " + id + ":\n");
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+            :}
+             |  let_keyword char_keyword identifier:id assignment_operator declaration_values:e delimiter
+             {:  
+                String[] partesOperador = e.toString().split("::");
+                String guarda = partesOperador[0];
+                if(validacionAsignacion(id, "char", partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright))){
+                    agregarSimbolo("char", id);
+                }
+                String parteUnica = partesOperador[0];
+                
+
+                // Si es un char siempre hacemos temporal
+                if (esChar(parteUnica)) {
+                    String tempLiteral = registroTemporalI();
+                    C3D.append("\n" + tempLiteral + " = " + parteUnica + ";\n");
+                    parteUnica = tempLiteral; 
+                } 
+                
+                // si es un temporal entonces lo asigno de una vez 
+                else if (!continuouNo(parteUnica)) {
+                    String tempExtra = registroTemporalI();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                // asignamos su id y lo mostramos
+                C3D.append("\n" + "data_char " + id + ":\n");
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+                //C3D.append("\n" + temp + " = " + partesOperador[2] + "\n");
+            :}
+             |  let_keyword string_keyword identifier:id assignment_operator declaration_values:e delimiter
+             {: 
+                String[] partesOperador = e.toString().split("::");
+                if(validacionAsignacion(id, "string", partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright))){
+                    agregarSimbolo("string", id);
+                }
+                String parteUnica = partesOperador[0];
+                
+
+                // Si es un string siempre hacemos temporal
+                if (esString(parteUnica)) {
+                    String tempLiteral = registroTemporalI();
+                    C3D.append("\n" + tempLiteral + " = " + parteUnica + ";\n");
+                    parteUnica = tempLiteral; 
+                } 
+                
+                // si es un temporal entonces lo asigno de una vez 
+                else if (!continuouNo(parteUnica)) {
+                    String tempExtra = registroTemporalI();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                // asignamos su id y lo mostramos
+                C3D.append("\n" + "data_string " + id + ":\n");
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+            :}
+             | error delimiter
+             {:
+               System.err.println("DECLARACION con error"); :}
+             | let_keyword error identifier delimiter
+             {: System.err.println("No declaro el tipo error"); :}
+             | let_keyword int_keyword error delimiter
+             {: System.err.println("No declaro el id error"); :}
+             | let_keyword float_keyword error delimiter
+             {: System.err.println("No declaro el id error"); :}
+             | let_keyword bool_keyword error delimiter
+             {: System.err.println("No declaro el id error"); :}
+            | let_keyword char_keyword error delimiter
+            {: System.err.println("No declaro el id error"); :}
+            | let_keyword string_keyword error delimiter
+            {: System.err.println("No declaro el id error"); :}
+
+            
+            //| let_keyword int_keyword identifier error 
+            //{: System.err.println("Error falta el delimitador"); :} 
+            | let_keyword float_keyword identifier error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword bool_keyword identifier error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword int_keyword identifier assignment_operator declaration_values error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword float_keyword identifier assignment_operator declaration_values error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword bool_keyword identifier assignment_operator declaration_values error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword char_keyword identifier assignment_operator declaration_values error
+            {: System.err.println("Error falta el delimitador"); :}
+            | let_keyword string_keyword identifier assignment_operator declaration_values error
+            {: System.err.println("Error falta el delimitador"); :}
+
+            | let_keyword error identifier assignment_operator declaration_values delimiter
+            {: System.err.println("Error falta el tipo"); :}
+
+             | error int_keyword identifier delimiter 
+             {: System.err.println("Error falta el let"); :}
+             | error float_keyword identifier delimiter 
+             {: System.err.println("Error falta el let"); :}
+             | error bool_keyword identifier delimiter 
+             {: System.err.println("Error falta el let"); :}
+             | error char_keyword identifier delimiter 
+             {: System.err.println("Error falta el let"); :}
+             | error string_keyword identifier delimiter 
+             {: System.err.println("Error falta el let"); :}
+
+             
+             //|int_keyword identifier assignment_operator declaration_values delimiter
+             //{: System.err.println("Error falta el let"); :}
+             //|float_keyword identifier assignment_operator declaration_values delimiter
+             //{: System.err.println("Error falta el let"); :}
+             //|bool_keyword identifier assignment_operator declaration_values delimiter
+             //{: System.err.println("Error falta el let"); :}
+             //|char_keyword identifier assignment_operator declaration_values delimiter
+             //{: System.err.println("Error falta el let"); :}
+             //|string_keyword identifier assignment_operator declaration_values delimiter
+             //{: System.err.println("Error falta el let"); :}
+             
+            | let_keyword int_keyword identifier assignment_operator error delimiter
+            {: System.err.println("Error en inicializacion de int"); :}
+            | let_keyword float_keyword identifier assignment_operator error delimiter
+            {: System.err.println("Error en inicializacion de float"); :}
+            | let_keyword bool_keyword identifier assignment_operator error delimiter
+            {: System.err.println("Error en inicializacion de bool"); :}
+            | let_keyword char_keyword identifier assignment_operator error delimiter
+            {: System.err.println("Error en inicializacion de char"); :}
+            | let_keyword string_keyword identifier assignment_operator error delimiter
+            {: System.err.println("Error en inicializacion de string"); :}
+
+             ;
+
+
+//Reasignación
+reassignment ::= identifier:id assignment_operator declaration_values:e delimiter
+            {:  
+                //De momento es solo el print. Ya para el código 3 direcciones si podría influir si se reasigna o no
+                String[] partesOperador = e.toString().split("::");
+                validacionReasignacion(id,  partesOperador[1], String.valueOf(idleft + 1), String.valueOf(idright));
+
+
+                String parteUnica;
+                if (partesOperador.length > 4) {
+                    // es una op anidada entonces se empieza a tomar desde ahí
+                    parteUnica = partesOperador[4];
+                } else {
+                    // sino entonces sigue siendo un numero 
+                    parteUnica = partesOperador[0];
+                }
+                
+
+                // Solo creamos un temporal sino es un temporal 
+                if (!continuouNo(parteUnica)) {
+                    String tempExtra = registroTemporalI();
+                    C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                    parteUnica = tempExtra;
+                }
+
+                C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                RESULT = id;
+
+
+            :}
+            | identifier assignment_operator error delimiter
+            {: System.err.println("Reasignación con error, declare un valor"); :}
+            | error assignment_operator declaration_values delimiter
+            {: System.err.println("Reasignación con error, declare un id"); :}
+            | identifier assignment_operator declaration_values error
+            {: System.err.println("Reasignación con error, falta el delimitador"); :}
+    ;
+
+
+// Array
+// Esto es como let int arr[5]
+array_declaration ::= let_keyword int_keyword identifier:id left_bracket arithmetic_expression:op right_bracket delimiter
+                {: 
+                    //Verificar que sea una operacion de enteros
+                    String[] partesOperador = op.toString().split("::");
+                    if(!(partesOperador[1].equals("int"))){
+                        System.err.println(String.format(
+                        "Error Semantico: La expresion aritmetica para indicar el tamanio del arrego debe ser de tipo int. Linea %s.", 
+                        (idleft +1)
+                        ));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }else{
+                        //Agregar el arreglo a la tabla. La función ya verifica si existía previamente
+                        ArrayList<Simbolo> simbolos = new ArrayList<>();
+                        agregarSimboloArray("arrayInt", id, partesOperador[0], simbolos);
+                    }
+                    
+                    String parteUnica;
+                    if (partesOperador.length > 4) {
+                        // es una op anidada entonces se empieza a tomar desde ahí
+                        parteUnica = partesOperador[4];
+                    } else {
+                        // sino entonces sigue siendo un numero 
+                        parteUnica = partesOperador[0];
+                    }
+                    
+                    
+
+                    // Solo creamos un temporal sino es un temporal 
+                    if (!continuouNo(parteUnica)) {
+                        String tempExtra = registroTemporalI();
+                        C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                        parteUnica = tempExtra;
+                    }
+
+                    C3D.append("\n" + "data_intArr " + id + ":\n");
+                    C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                    RESULT = id;
+ 
+                :}
+                | let_keyword int_keyword identifier error delimiter
+                {: System.err.println("Error en declaracion de array"); :}
+                | error int_keyword identifier left_bracket arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta let"); :}
+                | let_keyword error identifier left_bracket arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta tipo"); :}
+                | let_keyword int_keyword error left_bracket arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta id"); :}
+                | let_keyword int_keyword identifier left_bracket error right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta tamaño"); :}
+                | let_keyword int_keyword identifier left_bracket arithmetic_expression error delimiter
+                {: System.err.println("Error en declaracion de array, falta ]"); :}
+                | let_keyword int_keyword identifier error arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta ["); :}
+                | let_keyword int_keyword identifier left_bracket arithmetic_expression right_bracket error
+                {: System.err.println("Error en declaracion de array, falta delimitador"); :}
+
+
+
+
+                |  let_keyword char_keyword identifier:id left_bracket arithmetic_expression:op right_bracket delimiter
+                {:  
+                    //Verificar que sea una operacion de enteros
+                    String[] partesOperador = op.toString().split("::");
+                    if(!(partesOperador[1].equals("int"))){
+                        System.err.println(String.format(
+                        "Error Semantico: La expresion aritmetica para indicar el tamanio del arrego debe ser de tipo int. Linea %s.", 
+                        (idleft +1)
+                        ));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }else{
+                        //Agregar el arreglo a la tabla. La función ya verifica si existía previamente
+                        ArrayList<Simbolo> simbolos = new ArrayList<>();
+                        agregarSimboloArray("arrayChar", id, partesOperador[0], simbolos);
+                    }
+                    String parteUnica;
+                    if (partesOperador.length > 4) {
+                        // es una op anidada entonces se empieza a tomar desde ahí
+                        parteUnica = partesOperador[4];
+                    } else {
+                        // sino entonces sigue siendo un numero 
+                        parteUnica = partesOperador[0];
+                    }
+                    
+                   
+
+                    // Solo creamos un temporal sino es un temporal 
+                    if (!continuouNo(parteUnica)) {
+                        String tempExtra = registroTemporalI();
+                        C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                        parteUnica = tempExtra;
+                    }
+
+                    C3D.append("\n" + "data_CharArr " + id + ":\n");
+                    C3D.append("\n" + id + " = " + parteUnica + ";\n");
+
+                    RESULT = id;
+
+
+                :}
+                | error char_keyword identifier left_bracket arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta let"); :}
+                | let_keyword char_keyword error left_bracket arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta id"); :}
+                | let_keyword char_keyword identifier left_bracket error right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta tamaño"); :}
+                | let_keyword char_keyword identifier left_bracket arithmetic_expression error delimiter
+                {: System.err.println("Error en declaracion de array, falta ]"); :}
+                | let_keyword char_keyword identifier error arithmetic_expression right_bracket delimiter
+                {: System.err.println("Error en declaracion de array, falta ["); :}
+                | let_keyword char_keyword identifier left_bracket arithmetic_expression right_bracket error
+                {: System.err.println("Error en declaracion de array, falta delimitador"); :}
+                | let_keyword char_keyword identifier error delimiter
+                {: System.err.println("Error en declaracion de array"); :}
+
+
+                // seria tipo let int arr[5] = ¿1,2,3,4?$
+                |  let_keyword int_keyword identifier:id left_bracket arithmetic_expression:op right_bracket assignment_operator left_block array_literals:rec right_block delimiter
+                {: 
+                     
+                    
+                    // Lo dividimos para que así sea más fácil acceder a lo que se ocupa
+                    String[] elementosArray = rec.toString().split("::");
+                    ArrayList<Simbolo> simbolosArreglo = new ArrayList<>();
+                    
+                    // Para código 3D
+                    C3D.append("\n" + "data_intArr " + id + ":\n");
+                    
+                    // Descomponer tamaño
+                    //Descomponer la operación
+                    String[] partesOperador = op.toString().split("::");
+                    //Revvisar el tipo
+                    if(!(partesOperador[1].equals("int"))){
+                        System.err.println("Error Semantico: tamaño debe ser int. Linea " + (idleft + 1));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    } else {
+                        int indice = 0;
+                        
+                        
+                        for (String elemento : elementosArray){
+                            String[] partes = elemento.split(";;");  // recordar [valor, tipo, temporal]
+                            
+                            if(partes.length >= 3) {
+                                String valor = partes[0];
+                                String tipo = partes[1];
+                                String temporal = partes[2];
+
+                                //Vemos que sea del mismo tipo
+                                if(tipo.equals("int")){
+                                    simbolosArreglo.add(new Simbolo(valor, tipo));
+                                    
+                                    // Esto es para mostrar [0] = temporal;
+                                    C3D.append(id + "[" + indice + "] = " + temporal + ";\n");
+                                    indice++;
+                                } else {
+                                    System.err.println("Error Semantico: elemento " + valor + " debe ser int. Linea " + (idleft + 1));
+                                    erroresSemanticos++;
+                                    parser.erroresSemanticos++;
+                                }
+                            }
+                        }
+                        
+                        agregarSimboloArray("arrayInt", id, partesOperador[0], simbolosArreglo);
+                    }
+                :}
+                | error int_keyword identifier left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta let"); :}
+                | let_keyword error identifier left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta tipo"); :}
+                | let_keyword int_keyword error left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta id"); :}
+                | let_keyword int_keyword identifier left_bracket error right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta tamaño"); :}
+                | let_keyword int_keyword identifier left_bracket arithmetic_expression error assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta ]"); :}
+                | let_keyword int_keyword identifier error arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta ["); :}
+                | let_keyword int_keyword identifier left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block error
+                {: System.err.println("Error en declaracion de array, falta delimitador"); :}
+    
+                | let_keyword int_keyword identifier left_bracket arithmetic_expression right_bracket assignment_operator left_block error right_block delimiter
+                {: System.err.println("Error en inicializacion de array"); :}
+
+                // seria tipo let int arr[2] = ¿'a','b'?$
+                |  let_keyword char_keyword identifier:id left_bracket arithmetic_expression:op right_bracket assignment_operator left_block array_literals:rec right_block delimiter
+                {: 
+                    
+                    String[] elementosArray = rec.toString().split("::");
+                    ArrayList<Simbolo> simbolosArreglo = new ArrayList<>();
+
+                    C3D.append("\n" + "data_CharArr " + id + ":\n");
+
+                    String[] partesOperador = op.toString().split("::");
+                    if(!(partesOperador[1].equals("int"))){
+                        System.err.println(String.format(
+                        "Error Semantico: La expresion aritmetica para indicar el tamanio del arrego debe ser de tipo int. Linea %s.", 
+                        (idleft +1)
+                        ));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }else{
+                        int indice = 0;
+
+                        for (String elemento : elementosArray){
+                            String[] partes = elemento.split(";;");
+                            
+                            if(partes.length >= 3){  
+                                String valor = partes[0];
+                                String tipo = partes[1];
+                                String temporal = partes[2];
+
+                                if(tipo.equals("char")){
+                                    simbolosArreglo.add(new Simbolo(valor, tipo));
+                                    C3D.append(id + "[" + indice + "] = " + temporal + ";\n");
+                                    indice++;
+                                } else {  
+                                    System.err.println("Error Semantico: El tipo del elemento " + valor + " debe ser char para poder incluirlo en el arreglo " + id + " de la linea " + (idleft + 1) + ".");
+                                    erroresSemanticos++;
+                                    parser.erroresSemanticos++;
+                                }
+                            } else {  
+                                System.err.println("Error Semantico: Formato incorrecto en elemento del arreglo " + id + " de la linea " + (idleft + 1) + ".");
+                                erroresSemanticos++;
+                                parser.erroresSemanticos++;
+                            }
+                        }
+
+                        agregarSimboloArray("arrayChar", id, partesOperador[0], simbolosArreglo);
+                    }
+                :}
+                | error char_keyword identifier left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta let"); :}
+                | let_keyword char_keyword error left_bracket arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta id"); :}
+                | let_keyword char_keyword identifier left_bracket error right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta tamaño"); :}
+                | let_keyword char_keyword identifier left_bracket arithmetic_expression error assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta ]"); :}
+                | let_keyword char_keyword identifier error arithmetic_expression right_bracket assignment_operator left_block array_literals right_block delimiter
+                {: System.err.println("Error en declaracion de array, falta ["); :}
+
+                | let_keyword char_keyword identifier left_bracket arithmetic_expression:op right_bracket assignment_operator left_block error right_block delimiter
+                {: System.err.println("Error en inicializacion de array"); :}
+
+                ;
+
+array_literals ::= int_literal:e 
+                {: 
+                    String temp = registroTemporalI();
+                    C3D.append("\n" + temp + " = " + e + ";\n");
+                    RESULT = e + ";;int;;" + temp;  
+                :}
+                |  CHAR_LITERAL:e 
+                {: 
+                    String temp = registroTemporalI();
+                    C3D.append("\n" + temp + " = " + e + ";\n");
+                    RESULT = e + ";;char;;" + temp;
+                :}
+                |  identifier:n 
+                {: 
+                    reportarErrorNoExisteSimbolo(n);
+                    Simbolo simbolo = buscarSimbolo(n);
+                    if(simbolo != null){
+                        RESULT = n + ";;" + simbolo.getTipo() + ";;" + n;  
+                    }else{
+                        RESULT = n + ";;null;;null";
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }
+                :}
+                |  array_literals:rec comma_keyword int_literal:e
+                {: 
+                    String temp = registroTemporalI();
+                    C3D.append("\n" + temp + " = " + e + ";\n");
+                    RESULT = rec + "::" + e + ";;int;;" + temp;  
+                    
+                :}
+                 |  array_literals:rec comma_keyword CHAR_LITERAL:e
+                    {:
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + e + ";\n");
+                        RESULT = rec + "::" + e + ";;char;;" + temp;
+                        
+
+                    :}
+                 |  array_literals:rec comma_keyword identifier:n
+
+                 {: 
+                        reportarErrorNoExisteSimbolo(n);
+                        Simbolo simbolo = buscarSimbolo(n);
+                        if(simbolo != null){
+                            RESULT = rec + "::" + n + ";;"+ simbolo.getTipo();
+                        }else{
+                            RESULT = rec + "::" + n+";;null";
+                            erroresSemanticos++;
+                            parser.erroresSemanticos++;
+                        }
+                     :}
+                 ;
+
+assign_elements_array ::= identifier:id left_bracket arithmetic_expression:op right_bracket assignment_operator arithmetic_expression:element delimiter
+                {:  
+                    String[] posicionArreglo = op.toString().split("::");
+                    String[] elementoAsignado = element.toString().split("::");
+                    agregarElementoArregloPosicionEspecifica(id.toString(), (idleft + 1), posicionArreglo[1], elementoAsignado[1], posicionArreglo[0], elementoAsignado[0]);
+                        
+
+                    String indiceArr = posicionArreglo[0];
+                    String valor = elementoAsignado[0];
+    
+                    // si es un temporal entonces lo asigno de una vez 
+                    if (!esTemporal(valor) && esLiteralVerdadero(valor)) {
+                        String tempExtra = registroTemporalI();
+                        C3D.append(tempExtra + " = " + valor + ";\n");
+                        valor = tempExtra;
+                    }
+
+                    C3D.append("\n" + id + "[" +  indiceArr + "] = " + valor + ";\n");
+
+                :}
+                
+
+                |  identifier:id left_bracket arithmetic_expression:op right_bracket assignment_operator CHAR_LITERAL:element delimiter
+                {: 
+                    String[] posicionArreglo = op.toString().split("::");
+                    agregarElementoArregloPosicionEspecifica(id.toString(), (idleft + 1), posicionArreglo[1], "char", posicionArreglo[0], element.toString());
+                     
+
+                    String indiceArr = posicionArreglo[0];
+                    String tempChar = registroTemporalI();
+                    C3D.append(tempChar + " = " + element + ";\n");
+    
+                    C3D.append(id + "[" + indiceArr + "] = " + tempChar + ";\n");
+                :}
+                ;
+
+//Ya puede acceder a posiciones del arreglo con expresiones aritmeticas
+// esto es algo como x[2 + 3] RECORDAR HACERLO DESPUÉS PORQUE NO ENTIENDO
+array_access ::= identifier:id left_bracket arithmetic_expression:op right_bracket
+                {: //Verificar que exista el arreglo y que la expresión sea entero. Tipo arrayInt o arrayChar 
+                   
+                    String[] posicionArreglo = op.toString().split("::");
+                    String elemento = accederElementoDeArreglo(id, posicionArreglo[0], posicionArreglo[1], (idleft + 1), idright); //valor::tipo::fila::columna
+                    
+
+                    RESULT = elemento; //Para guardarlo y proceder con la validación posterior
+                :}
+                ;
+
+
+// input y output
+input_statement ::= input_keyword identifier:i delimiter
+                 {: 
+                    
+                    String temp = registroTemporalI();
+                    C3D.append("\n" + "input " + " = " + temp + ";\n");
+                    C3D.append("\n" + i + " = " + temp + ";\n");
+                 :}
+                 |  input_keyword error delimiter
+                 {: System.err.println("Error en input"); :}
+                 | error input_keyword identifier delimiter
+                 {: System.err.println("No se declaro el input"); :}
+                 | input_keyword identifier error
+                 {: System.err.println("Error falta el delimitador en input"); :}
+                 ;
+
+// FALTAN ERRORES EN OUTPUT
+output_statement ::= output_keyword identifier:i delimiter
+                {: 
+                    
+                    
+                    String temp = registroTemporalI();
+                    C3D.append("\n" + "output " + " = " + temp + ";\n");
+                    C3D.append("\n" + i + " = " + temp + ";\n");
+                    
+                :}
+                  |  output_keyword int_literal:i delimiter
+                    {: 
+
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + i + ";\n");
+                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        
+                        :}
+                  |  output_keyword float_literal:f delimiter
+                    {: 
+                        
+                        String temp = registroTemporalF();
+                         C3D.append("\n" + temp + " = " + f + ";\n");
+                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                                               
+
+                    :}
+                  |  output_keyword bool_literal:b delimiter
+                    {: 
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + b + ";\n");
+                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                                                
+                        :}
+                  |  output_keyword CHAR_LITERAL:c delimiter
+                    {: 
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + c + ";\n");
+                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                                              
+                        :}
+                  |  output_keyword STRING_LITERAL:s delimiter
+                    {: 
+                         
+                    
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + s + ";\n");
+                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        :}
+                  | output_keyword error delimiter
+                  {: System.err.println("Error en output"); :}
+                  ;
+
+//Posible solución para mostrar en un orden correcto las producciones en decide of 
+decide_of_helper ::= decide_keyword of_keyword:i left_parenthesis
+{:
+    //if (contadorIF > 1) {
+    //    contadorIF--;
+    //}
+    String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+    C3D.append("\n" + etiquetaEncabezado + ":\n");
+    
+    RESULT = String.valueOf(contadorIF);
+    encabezado++;
+:};
+
+
+
+//Decide of. Ya están separadas ambas  keywords
+decide_of_left ::= 
+            decide_of_helper:helper logical_expresion_and:e right_parenthesis minus_operator greater_operator                    {:  
+
+                        //Verificar que la expresión lógica sea booleana
+
+
+                        String[] expresion = e.toString().split("::");
+                        if(!(expresion[1].equals("bool"))){
+                            System.err.println(String.format(
+                            "Error Semantico: La expresion %s es de tipo %s. Debe ser de tipo bool para poder se utilizada como condicion en la estructura Decide Of. Linea %s.", 
+                            expresion[0], expresion[1], eleft+1
+                        ));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                        }
+                        
+
+                        //Crear la tabla de símbolos
+                        TablaDeSimbolos t = crearTablaDeSimbolos("decide of"); //Crear la nueva tabla para el decide of
+                        apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+                        // DECLARO PARAMAETROS EN DECIDE OF
+                        String param;
+                        if (expresion.length > 4 && expresion[4] != null) {
+                            param = expresion[4];
+                        } else {
+                            param = expresion[0];
+                        }
+                        String etiquetaBloque = "if_bloque" + contadorBloque;
+                        String etiquetaFin = "if_" + contadorIF + "_fin";
+                        String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+                        
+                        C3D.append("if " + param + " goto " + etiquetaBloque + ":\n"); 
+                        
+
+                        C3D.append("goto " + etiquetaEncabezado + ";\n");
+                        
+                        C3D.append("\n" + etiquetaBloque + ":\n");
+                        AgregarDireccion(etiquetaFin);
+                        
+                        contadorBloque++;
+                        contadorIF++;
+
+
+                    :};
+
+
+decide_of_left_and_content ::= 
+                            decide_of_left left_block loop_content right_block 
+                                {: 
+                                    desapilarTablaDeSimbolos(); //Desapilo aquí que ya se habría analizado ese bloque
+                                :}
+                            ;
+        
+                            
+
+decide_of ::= decide_of_left_and_content end_keyword decide_keyword delimiter
+              {: 
+            String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+            C3D.append("\n" + etiquetaEncabezado + ":\n");
+            C3D.append("goto if_1_fin;\n");
+            
+            C3D.append("\nif_1_fin:\n");
+             
+            eliminarDireccionBreak(); 
+                
+                
+                :}
+           |  decide_of_left_and_content elif_list end_keyword decide_keyword delimiter
+           {: 
+                C3D.append("\nif_" + (contadorIF + 1) + "_encabezado:\n");
+                C3D.append("goto if_1_fin;\n");
+                C3D.append("\nif_1_fin:\n");
+            
+            eliminarDireccionBreak();
+
+            
+            
+            :}
+           |  decide_of_left_and_content else_part end_keyword decide_keyword delimiter
+              {:
+                C3D.append("goto if_1_fin;\n");
+                C3D.append("\nif_" + (encabezado + 1) + "_encabezado:\n");
+                
+                C3D.append("goto if_1_fin;\n");
+                
+                C3D.append("\nif_1_fin:\n");
+                
+                
+                eliminarDireccionBreak();
+                
+                
+                
+                :}          
+           |  decide_of_left_and_content elif_list else_part end_keyword decide_keyword delimiter
+              {: 
+
+                C3D.append("goto if_" + (encabezado + 1) + "_encabezado;\n");
+
+                C3D.append("\nif_" + (encabezado + 1) + "_encabezado:\n");
+                
+                C3D.append("goto if_1_fin;\n");
+                
+                C3D.append("\nif_1_fin:\n");
+
+
+
+                
+                :}
+            | decide_keyword of_keyword left_parenthesis error right_parenthesis minus_operator greater_operator left_block loop_content right_block end_keyword decide_keyword delimiter
+           {: System.err.println("Error en condicion de decide of"); :}
+           ;
+
+elif_list ::= elif_part {:
+    UltimoElif = true;
+    
+:}
+        |  elif_list elif_part {:
+        UltimoElif = false;
+        existeElif = true;
+        
+        :}
+           ;
+
+elif_helper ::= left_parenthesis:i {:
+    
+    C3D.append("goto if_1_fin;\n");
+    String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+    C3D.append("\n" + etiquetaEncabezado + ":\n");
+    
+    RESULT = String.valueOf(encabezado);
+
+
+
+:};
+
+elif_part_left ::= elif_helper logical_expresion_and:e right_parenthesis minus_operator greater_operator
+                    {:
+                        //Verificar que la expresión lógica sea booleana
+                        String[] expresion = e.toString().split("::");
+                        if(!(expresion[1].equals("bool"))){
+                            System.err.println(String.format(
+                            "Error Semantico: La expresion %s es de tipo %s. Debe ser de tipo bool para poder se utilizada como condicion en la estructura Decide Of. Linea %s.", 
+                            expresion[0], expresion[1], eleft+1
+                        ));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                        }
+                        //Crear la tabla de símbolos
+                        TablaDeSimbolos t = crearTablaDeSimbolos("elif"); //Crear la nueva tabla para el decide of
+                        apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+
+                            AgregarDireccion("endDecideOf");
+    
+                        
+                        String param;
+                        if (expresion.length > 4 && expresion[4] != null) {
+                            param = expresion[4];
+                        } else {
+                            param = expresion[0];
+                        }
+                        String etiquetaBloque = "if_bloque" + contadorBloque;
+                        String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+                        
+                        C3D.append("if " + param + " goto " + etiquetaBloque + ";\n");
+
+                        
+                        if (UltimoElif) {
+                            C3D.append("goto if_1_fin;\n");
+                        } else {
+                            // Si hay más elifs, ve al siguiente encabezado
+                            encabezado++;
+                            String etiquetaEncabezado2 = "if_" + encabezado + "_encabezado";
+                            C3D.append("goto " + etiquetaEncabezado2 + ";\n");
+                        }
+                        
+                        C3D.append("\n" + etiquetaBloque + ":\n");
+                        
+                        contadorBloque++;                     
+                    :}
+                ;
+
+elif_part ::= elif_part_left left_block loop_content right_block 
+           {:  
+
+            
+            eliminarDireccionBreak();
+                desapilarTablaDeSimbolos();
+            :};
+            
+else_helper ::= else_keyword {:
+
+    
+    C3D.append("goto if_1_fin;\n");
+    String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
+    C3D.append("\n" + etiquetaEncabezado + ":\n");
+    
+    RESULT = String.valueOf(encabezado);
+
+:};
+
+
+else_part_left ::= else_helper minus_operator greater_operator
+                    {:  
+                    
+                        //Crear la tabla de símbolos
+                        TablaDeSimbolos t = crearTablaDeSimbolos("else"); //Crear la nueva tabla para el decide of
+                        apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+                    :}
+                    ;
+else_part ::= else_part_left left_block loop_content right_block
+           {:  desapilarTablaDeSimbolos();:}
+;
+
+// Estoy aquí
+
+//Loop
+loop_helper ::= loop_keyword
+            {:
+                String etiquetaInicioLoop = "loop_inicio_1";
+                String etiquetaFinalLoop = "loop_fin_1";
+                C3D.append("\n" + etiquetaInicioLoop + ":\n");
+                AgregarDireccion(etiquetaFinalLoop);
+            :}
+            ;
+
+loop_left ::= loop_helper 
+            {: 
+             //Crear la tabla de símbolos
+
+                TablaDeSimbolos t = crearTablaDeSimbolos("loop"); 
+                apilarNuevaTablaDeSimbolos(t); 
+            :};
+loop ::= loop_left loop_content exit_keyword when_keyword logical_expresion_and:e delimiter end_keyword loop_keyword delimiter
+      {:  
+        //Verificar que la expresión lógica sea booleana
+        String[] expresion = e.toString().split("::");
+        if(!(expresion[1].equals("bool"))){
+            System.err.println(String.format(
+            "Error Semantico: La expresion %s es de tipo %s. Debe ser de tipo bool para poder se utilizada como condicion en la estructura loop. Linea %s.", 
+            expresion[0], expresion[1], eleft+1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+         }
+
+
+        //Agarro el último temporal
+        String valorFinal;
+        String valor = expresion[expresion.length - 1];
+        if(esTemporal(valor)){
+            valorFinal = valor;
+        } else {
+            // Sino viene entonces lo que hago es asignarle un registro temporal
+            valorFinal = expresion[0];
+            if(!esTemporal(valorFinal)){
+                String tmp = registroTemporalI();
+                C3D.append(tmp + " = " + valorFinal + ";\n");
+                valorFinal = tmp;
+            }
+        }
+
+        String inicio = "loop_inicio_1";
+        String fin = "loop_fin_1";
+        AgregarDireccion(fin);
+        C3D.append("if " + valorFinal + " goto " + fin + ";\n");
+        C3D.append("goto " + inicio + ";\n");
+        C3D.append(fin + ":\n");        
+
+
+         
+         desapilarTablaDeSimbolos();
+         eliminarDireccionBreak();
+        :}
+      | loop_left error exit_keyword when_keyword loop_keyword delimiter
+      {: System.err.println("Error en contenido de loop");  desapilarTablaDeSimbolos();:};
+
+loop_content ::= statement
+              |  break_statement
+              |  loop_content statement
+              |  loop_content break_statement
+              ;
+
+break_statement ::= break_keyword delimiter
+                 {: 
+                    
+                    String direccion = obtenerDireccionActual();
+                    //String etiquetaaAvanzar = ""
+                    C3D.append("\n" + "goto " + direccion  + ";\n");
+
+                :}
+;
+for_helperInicio ::= for_keyword
+        {:
+            C3D.append("\n" + "for_inicio " + contadorFor + ":\n");
+            RESULT = String.valueOf(contadorFor);
+            //AgregarDireccion("for1_fin");
+        :}
+        ;
+
+//For
+for_loop_left ::= 
+        for_helperInicio reassignment:var step_keyword int_literal:paso to_keyword int_literal:hasta do_keyword 
+        {:  
+            //Validación
+            Simbolo simboloReasignacion = buscarSimbolo(String.valueOf(var));
+            if (simboloReasignacion != null){
+                validacionSemanticaAsignacionFor(simboloReasignacion.getTipo(), "int", String.valueOf(varleft+1), String.valueOf(varright));
+            }   
+            
+
+            String etiquetaFinFor = "fin_for" + contadorFor;
+            AgregarDireccion(etiquetaFinFor);
+            
+            //Crear la tabla de símbolos
+            String temp = registroTemporalI();
+            C3D.append("\n" + temp + " = " + paso + ";\n");
+            C3D.append("\n" + "for_stepDO = " + temp + ";\n");
+            String temp2 = registroTemporalI();
+            C3D.append("\n" + temp2 + " = " + hasta + ";\n");
+            C3D.append("\n" + "for_hasta = " + hasta + ";\n");
+            String temp3 = registroTemporalI();
+            C3D.append("\n" + temp3 + " = " + var + " >= " + temp2 + ";\n");
+            C3D.append("\n" + "if " + temp3 + " goto fin_for" + contadorFor + ";\n");
+            String temp4 = registroTemporalI(); 
+            C3D.append("\n" + temp4 + " = " + var + " + " + paso + ";\n");
+            C3D.append("\n" + var + " = " + temp4 + ";\n");
+            TablaDeSimbolos t = crearTablaDeSimbolos("for"); 
+            apilarNuevaTablaDeSimbolos(t); 
+
+            
+        :}
+          |  for_helperInicio reassignment:var step_keyword int_literal:paso downto_keyword int_literal:hasta do_keyword 
+        {: 
+            //Validación
+            //Validación
+            Simbolo simboloReasignacion = buscarSimbolo(String.valueOf(var));         
+            if (simboloReasignacion != null){
+                validacionSemanticaAsignacionFor(simboloReasignacion.getTipo(), "int", String.valueOf(varleft+1), String.valueOf(varright));
+            }  
+
+            //Crear la tabla de símbolos
+
+            //Crear la tabla de símbolos
+            String temp = registroTemporalI();
+            C3D.append("\n" + temp + " = " + paso + ";\n");
+            C3D.append("\n" + "for_stepDOWNto = " + temp + ";\n");
+            String temp2 = registroTemporalI();
+            C3D.append("\n" + temp2 + " = " + hasta + ";\n");
+            C3D.append("\n" + "for_hasta = " + hasta + ";\n");
+            String temp3 = registroTemporalI();
+            C3D.append("\n" + temp3 + " = " + var + " <= " + temp2 + ";\n");
+            C3D.append("\n" + "if " + temp3 + " goto fin_for" + contadorFor + ";\n");
+            String temp4 = registroTemporalI(); 
+            C3D.append("\n" + temp4 + " = " + var + " - " + paso + ";\n");
+            C3D.append("\n" + var + " = " + temp4 + ";\n");
+
+            TablaDeSimbolos t = crearTablaDeSimbolos("for"); 
+            apilarNuevaTablaDeSimbolos(t); 
+        :}
+          |  for_helperInicio reassignment:var step_keyword float_literal:paso to_keyword float_literal:hasta do_keyword 
+        {: 
+
+            //Validación
+            //Validación
+            Simbolo simboloReasignacion = buscarSimbolo(String.valueOf(var));         
+            if (simboloReasignacion != null){
+                validacionSemanticaAsignacionFor(simboloReasignacion.getTipo(), "float", String.valueOf(varleft+1), String.valueOf(varright));
+            }  
+
+            String temp = registroTemporalF();
+            C3D.append("\n" + temp + " = " + paso + ";\n");
+            C3D.append("\n" + "for_stepDO = " + temp + ";\n");
+            String temp2 = registroTemporalF();
+            C3D.append("\n" + temp2 + " = " + hasta + ";\n");
+            C3D.append("\n" + "for_hasta = " + hasta + ";\n");
+            String temp3 = registroTemporalF();
+            C3D.append("\n" + temp3 + " = " + var + " >= " + temp2 + ";\n");
+            C3D.append("\n" + "if " + temp3 + " goto fin_for" + contadorFor + ";\n");
+            String temp4 = registroTemporalF(); 
+            C3D.append("\n" + temp4 + " = " + var + " + " + paso + ";\n");
+            C3D.append("\n" + var + " = " + temp4 + ";\n");
+
+            //Crear la tabla de símbolos
+                TablaDeSimbolos t = crearTablaDeSimbolos("for"); 
+                apilarNuevaTablaDeSimbolos(t); 
+        :}
+          |  for_helperInicio reassignment:var step_keyword float_literal:paso downto_keyword float_literal:hasta do_keyword 
+        {:
+            //Validación
+            Simbolo simboloReasignacion = buscarSimbolo(String.valueOf(var));         
+            if (simboloReasignacion != null){
+                validacionSemanticaAsignacionFor(simboloReasignacion.getTipo(), "float", String.valueOf(varleft+1), String.valueOf(varright));
+            }  
+
+            //Crear la tabla de símbolos
+            String temp = registroTemporalF();
+            C3D.append("\n" + temp + " = " + paso + ";\n");
+            C3D.append("\n" + "for_stepDOWNto = " + temp + ";\n");
+            String temp2 = registroTemporalF();
+            C3D.append("\n" + temp2 + " = " + hasta + ";\n");
+            C3D.append("\n" + "for_hasta = " + hasta + ";\n");
+            String temp3 = registroTemporalF();
+            C3D.append("\n" + temp3 + " = " + var + " <= " + temp2 + ";\n");
+            C3D.append("\n" + "if " + temp3 + " goto fin_for" + contadorFor + ";\n");
+            String temp4 = registroTemporalF(); 
+            C3D.append("\n" + temp4 + " = " + var + " - " + paso + ";\n");
+            C3D.append("\n" + var + " = " + temp4 + ";\n");
+                TablaDeSimbolos t = crearTablaDeSimbolos("for"); 
+                apilarNuevaTablaDeSimbolos(t); 
+        :}  
+        ;
+
+
+for_loop ::= for_loop_left left_block loop_content right_block
+        {: 
+            desapilarTablaDeSimbolos();
+            C3D.append("\n" + "goto for_inicio" + contadorFor + ":");
+            C3D.append("\n" + "fin_for " + contadorFor + ":\n");
+            eliminarDireccionBreak();
+            contadorFor++;
+            
+            :}
+        ;
+
+//Funciones
+
+function_helper ::= int_keyword 
+{: 
+    contadorTemporalINT = 1;
+    contadorTemporalFLOAT = 1;
+    C3D.append("\n" + "inicio_funcionInt" + contadorFuncINT + ":\n");
+    funcInt = true;
+
+    :};
+
+function_helperF ::= float_keyword 
+{: 
+    contadorTemporalINT = 1;
+    contadorTemporalFLOAT = 1;
+    C3D.append("\n" + "inicio_funcionFloat" + contadorFuncFLOAT + ":\n");
+    funcFloat = true; 
+    :};
+
+
+function_helperB ::= bool_keyword 
+{: 
+    contadorTemporalINT = 1;
+    contadorTemporalFLOAT = 1;    
+    C3D.append("\n" + "inicio_funcionBool" + contadorFuncBOOL + ":\n");
+    funcBool = true; 
+    :};
+
+
+function_helperC ::= char_keyword 
+{: 
+    contadorTemporalINT = 1;
+    contadorTemporalFLOAT = 1;    
+    C3D.append("\n" + "inicio_funcionChar" + contadorFuncCHAR + ":\n");
+    funcChar = true; 
+    :};
+
+
+function_helperS ::= string_keyword 
+{: 
+    contadorTemporalINT = 1;
+    contadorTemporalFLOAT = 1;
+    C3D.append("\n" + "inicio_funcionString" + contadorFuncSTRING + ":\n");
+    funcString = true; 
+    :};
+
+
+
+//Esta parte es para poder tomar el identificador y ejecutar el código que va a crear la tabla de símbolos de esta parte
+function_left ::=  
+           // Solo para enteros 
+            function_helper identifier:id
+                {: 
+                     
+                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
+                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+
+                    //Agregar a la tabla de funciones
+                    agregarFuncion(id, "int", (idleft + 1));
+                :}
+            |  function_helperF identifier:id
+                {: 
+                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
+                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+
+                    //Agregar a la tabla de funciones
+                    agregarFuncion(id, "float", (idleft + 1));
+                :}
+            |  function_helperB identifier:id
+                {:
+                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
+                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+                    
+                    //Agregar a la tabla de funciones
+                    agregarFuncion(id, "bool", (idleft + 1));
+                :}
+            |  function_helperC identifier:id
+                {: 
+                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
+                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+
+                    //Agregar a la tabla de funciones
+                    agregarFuncion(id, "char", (idleft + 1));
+                :}
+            |  function_helperS identifier:id
+                {: 
+                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
+                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+
+                    //Agregar a la tabla de funciones
+                    agregarFuncion(id, "string", (idleft + 1));
+                :}
+            ;
+
+function ::= 
+          // Solo para enteros 
+          function_left left_parenthesis right_parenthesis block:var
+            {: 
+                int cont = contadorTemporalINT - 1;
+                if(funcInt == true){
+                C3D.append("\n" + "fin_funcion" + contadorFuncINT + ":\n");
+                contadorTemporalINT++;
+                contadorFuncINT++;
+                funcInt = false;
+                }
+                if ( funcFloat == true){
+                C3D.append("\n" + "fin_funcionFloat" + contadorFuncFLOAT + ":\n");
+                contadorTemporalFLOAT++;
+                contadorFuncFLOAT++;
+                funcFloat = false;
+
+                }
+                if (funcBool == true){
+                C3D.append("\n" + "fin_funcionBool" + contadorFuncBOOL + ":\n");
+                contadorTemporalINT++;
+                contadorFuncBOOL++;
+                funcBool = false;
+
+                }
+                if (funcChar == true){
+                C3D.append("\n" + "fin_funcionChar" + contadorFuncCHAR + ":\n");
+                contadorTemporalINT++;
+                contadorFuncCHAR++;
+                funcChar = false;
+
+                }
+                if (funcString == true){
+                C3D.append("\n" + "fin_funcionString" + contadorFuncSTRING + ":\n");
+                contadorTemporalINT++;
+                contadorFuncSTRING++;
+                funcString = false;
+                }
+                if (funcVoid == true){
+                C3D.append("\n" + "fin_funcionVoid" + contadorFuncVOID + ":\n");
+                contadorTemporalINT++;
+                contadorFuncVOID++;
+                funcVoid = false;
+
+                }
+
+                //Aquí desapilo
+                desapilarTablaDeSimbolos();
+                
+             :}
+          |  function_left left_parenthesis params right_parenthesis block
+            {: 
+                int cont = contadorTemporalINT - 1;
+                if(funcInt == true){
+                C3D.append("\n" + "return " + "t" +cont + ":\n");
+                C3D.append("\n" + "fin_funcion" + contadorFuncINT + ":\n");
+                contadorTemporalINT++;
+                funcInt = false;
+                }
+
+                if ( funcFloat == true){
+                C3D.append("\n" + "return " + "t" +cont + ":\n");
+                C3D.append("\n" + "fin_funcionFloat" + contadorFuncFLOAT + ":\n");
+                contadorTemporalFLOAT++;
+                contadorFuncFLOAT++;
+                funcFloat = false;
+
+                }
+
+                if (funcBool == true){
+                C3D.append("\n" + "return " + "t" +cont + ":\n");
+                C3D.append("\n" + "fin_funcionBool" + contadorFuncBOOL + ":\n");
+                contadorTemporalINT++;
+                contadorFuncBOOL++;
+                funcBool = false;
+
+                }
+                if (funcChar == true){
+                C3D.append("\n" + "return " + "t" +cont + ":\n");
+                C3D.append("\n" + "fin_funcionChar" + contadorFuncCHAR + ":\n");
+                contadorTemporalINT++;
+                contadorFuncCHAR++;
+                funcChar = false;
+
+                }
+                if (funcString == true){
+                C3D.append("\n" + "return " + "t" +cont + ":\n");
+                C3D.append("\n" + "fin_funcionString" + contadorFuncSTRING + ":\n");
+                contadorTemporalINT++;
+                contadorFuncSTRING++;
+                funcString = false;
+                }
+                if (funcVoid == true){
+                C3D.append("\n" + "fin_funcionVoid" + contadorFuncVOID + ":\n");
+                contadorTemporalINT++;
+                contadorFuncVOID++;
+                funcVoid = false;
+
+                }
+
+                desapilarTablaDeSimbolos();
+             :}
+          |  function_left left_parenthesis error right_parenthesis block
+          {: System.err.println("ERROR en parámetros de función "); :}
+          ;
+
+
+
+
+params ::= param params_tail;
+
+params_tail ::= /* empty */
+             |  comma_keyword param params_tail
+             ;
+
+param ::= int_keyword identifier:id {: 
+        agregarSimbolo("int", id); 
+        agregarParametro(new Simbolo(id, "int"));
+        C3D.append("\n" + "data_paramInt " +  id + ":\n");
+        RESULT = id;
+    
+    ;:}
+       |  float_keyword identifier:id {: 
+        agregarSimbolo("float", id); 
+        agregarParametro(new Simbolo(id, "float"));
+        C3D.append("\n" + "data_paramFloat " + id + ":\n");
+        RESULT = id;
+
+        
+        :}
+       |  bool_keyword identifier:id {: 
+        agregarSimbolo("bool", id); 
+        agregarParametro(new Simbolo(id, "bool"));
+        C3D.append("\n" + "data_paramBool " + id + ":\n");
+        RESULT = id;       
+        
+        :}
+       |  char_keyword identifier:id {: 
+        agregarSimbolo("char", id); 
+        agregarParametro(new Simbolo(id, "char")); 
+        C3D.append("\n" + "data_paramChar " + id + ":\n");
+        RESULT = id; 
+
+        :}
+       |  string_keyword identifier:id {: 
+        agregarSimbolo("string", id); 
+        agregarParametro(new Simbolo(id, "string")); 
+        C3D.append("\n" + "data_paramString " + id + ":\n");
+        RESULT = id;
+       :}
+       ;
+
+return_statement ::= return_keyword:r delimiter
+                  {:  
+                    //Verificar que el retorno void coincida con una función void.
+                    String tipoFuncion = tablaDeFunciones.obtenerTipoFuncion(funcionActual);
+                    if(!(tipoFuncion.equals("void"))){
+                        //Se reporta el error semántico. Se pretende retornar algo en una función void
+                        System.err.println("Error Semantico: La funcion " + funcionActual + " es de tipo " + tipoFuncion+ ". El retorno debe de incluir un valor de este tipo. Linea " + (rleft + 1)); 
+                         erroresSemanticos++;
+                         parser.erroresSemanticos++;
+                    }
+                    RESULT = null;
+                    
+                  :}
+                  |  return_keyword:r declaration_values:e delimiter
+                  {: 
+                    //Verificar que el retorno coincida.
+                    String tipoFuncion = tablaDeFunciones.obtenerTipoFuncion(funcionActual);
+                    String[] expresion = e.toString().split("::");
+                    if(!(tipoFuncion.equals(expresion[1]))){
+                        //Se reporta el error semántico. El retorno es diferente al tipo de la función
+                        System.err.println("Error Semantico: La funcion " + funcionActual + " es de tipo " + tipoFuncion+ ". El retorno debe de incluir un valor de este tipo. Linea " + (rleft + 1)); 
+                         erroresSemanticos++;
+                         parser.erroresSemanticos++;
+                    }
+
+                    String valorRetorno;
+                        if (expresion.length > 4 && expresion[4] != null) {
+                            valorRetorno = expresion[4];  
+                        } else {
+                            valorRetorno = expresion[0];  
+                        }
+                        
+                        if (!esTemporal(valorRetorno) && esLiteralVerdadero(valorRetorno)) {
+                            String temp = veoTipo(expresion[1]);  
+                            C3D.append(temp + " = " + valorRetorno + ";\n");
+                            valorRetorno = temp;
+                        }
+                        
+                        C3D.append("return " + valorRetorno + ";\n");
+                        RESULT = valorRetorno; 
+                  :}
+                  ;
+
+function_call ::= identifier:id left_parenthesis right_parenthesis
+               {: 
+               RESULT = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;:}
+               |  identifier:id left_parenthesis args:ar right_parenthesis
+               {:
+                    //Verificaciones. En ar se tiene algo así por ejemplo a::null;;b::null;;1::int;;1.2::float donde es valor::tipo;;valor::tipo...
+                    boolean existeLaFuncion = tablaDeFunciones.existeLaFuncion(id);
+                    String retorno = id + "::null::" + (idleft + 1) + "::" + idright;
+                    if(existeLaFuncion){
+                        //Verificar que la cantidad de parámetros sea la misma
+                        String[] parametros = ar.toString().split(";;");
+                        boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, parametros.length);
+                        if(cantidadParametros){
+                            //Verificar que el orden de los tipos sea el correcto
+                            ArrayList<String> tipos = new ArrayList<>();
+
+                            for (String elemento : parametros) {
+                                String[] partes = elemento.split("::"); 
+                                tipos.add(partes[1]);               
+                            }
+
+                            boolean coincidenLosParametros = tablaDeFunciones.coincidenLosTiposDeLosParametros(id, tipos);
+                            if(coincidenLosParametros){
+                                //Se pone el tipo de la función, ya pasó las verificaciones
+                                retorno = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;
+                            }else{
+                                System.err.println("Error Semantico: No coinciden los tipos de los parametros indicados en la funcion " + id + " Se esperaba: " + tablaDeFunciones.obtenerListaDeTiposDeParametros(id)+ " .Linea " + (idleft + 1)); 
+                                erroresSemanticos++;
+                                parser.erroresSemanticos++;
+                            }
+                        }else{
+                            System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " + id + " no es correcta. Se esperaban " + tablaDeFunciones.cantidadDeParametros(id)+ " .Linea " + (idleft + 1)); 
+                            erroresSemanticos++;
+                            parser.erroresSemanticos++;
+                            
+                        }
+                    }else{
+                         System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " + id + " .Linea " + (idleft + 1)); 
+                         erroresSemanticos++;
+                         parser.erroresSemanticos++;
+                    }
+                    RESULT = retorno; //Se coloca el valor de retorno en el RESULT para posteriores validaciones   id de la funcion::tipo
+                    
+                :}
+               ;
+
+args ::= int_literal:e  {: RESULT = e + "::int"; :} //valor::tipo
+      |  float_literal:e {: RESULT = e + "::float"; :} 
+      |  identifier:n 
+        {: 
+            //Verificar que exista el identificador
+            reportarErrorNoExisteSimbolo(n);
+            //Obtener el tipo
+            Simbolo simbolo = buscarSimbolo(n);
+            if(simbolo != null){
+                RESULT = n + "::" +simbolo.getTipo();
+            }else{
+                RESULT = n+"::null";
+                erroresSemanticos++;
+                parser.erroresSemanticos++;
+            }
+        :}
+      
+      |  array_access:e {: RESULT = e; :} //aquí viene de otras producciones el valor del elemento al que se acceda 
+      |  STRING_LITERAL:e  {: RESULT = e + "::string"; :} 
+      |  CHAR_LITERAL:e {: RESULT = e + "::char"; :} 
+      |  bool_literal:e {: RESULT = e + "::bool"; :}
+      |  args:ar comma_keyword int_literal:e
+        {:
+            RESULT = ar + ";;" + e + "::int";  
+        :}
+      |  args:ar comma_keyword float_literal:e
+        {:
+            RESULT = ar + ";;" + e + "::float";  
+        :}
+      |  args:ar comma_keyword identifier:n
+
+        {: 
+            //Verificar que exista el identificador
+            reportarErrorNoExisteSimbolo(n);
+            //Obtener el tipo
+            Simbolo simbolo = buscarSimbolo(n);
+            if(simbolo != null){
+                RESULT = ar+ ";;"+ n + "::" +simbolo.getTipo();
+            }else{
+                RESULT = ar + ";;" + n+"::null";
+                erroresSemanticos++;
+                parser.erroresSemanticos++;
+            }
+        :}
+      |  args:ar comma_keyword array_access:e
+        {:
+            RESULT = ar + ";;" + e;  
+        :}
+      |  args:ar comma_keyword STRING_LITERAL:e
+        {:
+            RESULT = ar + ";;" + e + "::string";  
+        :}
+      |  args:ar comma_keyword  CHAR_LITERAL:e
+        {:
+            RESULT = ar + ";;" + e + "::char";  
+        :}
+        |  args:ar comma_keyword  bool_literal:e
+        {:
+            RESULT = ar + ";;" + e + "::bool";  
+        :}
+      ;
+
+
+//Bloques de código y statemets
+block ::= left_block statements right_block
+        
+       |  left_block right_block
+         
+       |  left_block error right_block
+       {: System.err.println("bloque con error"); :}
+       ;
+
+statements ::= statement
+            |  statements statement
+            ;
+
+statement ::= declaration
+           |  reassignment
+           |  array_declaration
+           |  assign_elements_array
+           |  input_statement
+           |  output_statement
+           |  decide_of
+           |  loop
+           |  for_loop
+           |  return_statement
+           ;
+
+// Variables globales
+global_variables ::= /* empty */
+                  |  global_variables declaration //Puedo hacer que si no hay tabla ya creada la haga. Sino no hace nada 
+                  ;
+
+
+
+//Programa principal
+principal_left ::= void_keyword:id principal_keyword left_parenthesis right_parenthesis 
+                    {: //Para poder crear la tabla de símbolos´
+                            contadorTemporalINT = 1;
+                            contadorTemporalFLOAT = 1;
+                        C3D.append("\n" + "inicio principal:\n");
+                        TablaDeSimbolos t = crearTablaDeSimbolos("Principal"); //Crear la nueva tabla
+                        apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
+                        //Agregar a la tabla de funciones
+                        agregarFuncion("principal", "void", (idleft + 1));
+                     :} 
+                     ;
+principal ::= principal_left block
+           ;
+
+//Funciones agrupadas
+functions ::= /* empty */
+           |  functions function
+           ;
+
+
+//Símbolo inicial. Ya se inicia con funciones y luego la principal
+program ::= global_variables  functions principal
+         {: 
+         C3D.append("\n" + "fin principal\n");
+         parser.sePuedeoNo();
+         
+         mostrarCodigo3Direcciones();
+         
+         :};

@@ -1,0 +1,83 @@
+
+ let string s1$
+ let string s1$
+ let string s1$
+
+¡ Comentario 
+asdasdsd    
+    multilinea 
+!
+float mi  є int dif, char otra   э ¿  |sintactico  
+        let int ananin$
+        let int arr [5]$
+        let char miChar= ' '$
+	let int _otra$
+	let string str="Hola $~&|?$& э  mundo"$
+        let int a$
+        let float s1$
+        let int var2$
+	for  i=20 $ step -2 downto 0  do  | puede dar sintactico
+	 ¿ 
+		loop
+		  	s1 = var2 - 1$ |semantico
+			var = var - 1$ |semantico
+                        break$
+		exit    when є var2>12.2 @ Σ є12> є 34+35 ээ  э $ |semantico
+		end    loop$
+
+
+		decide   of
+		є _x24 >= var * 5.6 э  ->
+		 ¿ 
+			output  "entra al if" $
+                        break$
+                        return$
+		 ?
+                 end    decide   $
+		decide       of 
+		є true э ->
+		 ¿ 
+			output  var  $
+		 ? 
+		else ->
+		 ¿ 
+			decide of  |semantico otra
+				 є _otra == 1 э  -> ¿ 
+					output  "!|"  $ ?
+				є _otra == 2  э -> ¿
+					_otra = 10$
+					 ? 
+
+				else  -> ¿ | sintactico
+					_otra = -10.5 * -1.9$ ?
+                                        end decide $
+
+
+			decide of  |semantico otra2 
+				 є _otra2 == 10  э -> ¿ 
+					output  "un case" $ ?
+end     decide      $
+		 ?
+                end decide $
+                 
+	 ? 
+	return 1$ |semantico
+  ? 
+
+ bool miOtraFun  є  э   ¿ 
+	return -5.6$ |semantico
+  ? 
+
+ void principal є э  ¿ | semantico tipo int, sintactico?
+        arr = 10 - arr[67 + i++ - 1 + 4] * func1  є 'h', ola, True, "hola mundo", 4.5, 'a' э $ 
+	arr [ 67 ] = -0.01 + arr [ 67 ] $  | semantico
+	let bool b1$ |semantico
+	let string s1$ |semantico
+	input  s1  $ |semantico
+	output  b1  $ |semantico
+	output  true  $ |semantico
+	output  -6.7  $
+	return$  |sintactico
+	return 1+f є  э $
+
+ ? 

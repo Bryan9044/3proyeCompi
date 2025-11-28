@@ -1,0 +1,9 @@
+Nombre de la Tabla: Global
+Simbolo: s1	Tipo: string	Linea: 2	Columna: 13
+Simbolo: arr	Tipo: int	Linea: 9	Columna: 17
+Simbolo: miChar	Tipo: char	Linea: 10	Columna: 18
+Simbolo: _otra	Tipo: int	Linea: 11	Columna: 10
+Simbolo: str	Tipo: string	Linea: 12	Columna: 13
+Nombre de la Tabla: Principal
+Simbolo: b1	Tipo: bool	Linea: 68	Columna: 11
+Simbolo: s1	Tipo: string	Linea: 69	Columna: 13

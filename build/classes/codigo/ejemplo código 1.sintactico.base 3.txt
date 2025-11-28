@@ -1,0 +1,75 @@
+ 
+let string s1$ | sintactico
+let bool b1$
+
+void principal є   э  ¿ 
+
+	let char miChar='!'$
+	let char miChar2='a'$ |sintactico
+	let string str1="Mi string 1"$
+	let float fl1$
+	let float fl1=56.6$ |semantico fl1
+	let int in1=fl1--- -14%in1 +++ 7 / 15$ |semantico fl1, in1, semantico division
+	let float fl2=3.7 ^ fl1+ є 45.6 % 76 э $ |semantico literal 76
+	
+
+	arr = 10 - arr ¿67? * func1  є hola, true, holaMundo, 4.5, 'a' э $ |semantico func1, retorno func1
+	fl1 = 4.5%miChar^-0.005$ |semantico miChar
+	a = miFunc є  1,'a' э $ |semantico miFunc, hola
+	let bool bl0 = 6.7 != 8.9$ |ok
+	bl0 = true != false$ |ok
+	let bool bl1 = in1 >= fl1 ~ false @ Σ є func2 є 3,in1 э  > 56 э $ |semantico in1 >= fl1, func2
+	return   bl1$ |semantico
+ ? 
+
+float func1 є char x22, char x22 э  ¿ |semantico borrar parametro
+
+	let int numero$ let char letra$
+	numero = 10$
+	letra = 'a'$
+	output  numero  $
+	output  letra  $
+	let int numS = numero - 1 * numero + numero $
+	output  numS  $
+
+	let float z =-0.01$ |error sintactico
+	let char x22='a'$ 
+	let char miChar='a'$  |error sintactico
+	let char miChar2='a'$ |sintactico-semantico
+	let int x30=-1$
+	let bool x40=false$
+	let char x50¿1000? = ¿4,5?$
+	let string x50="Hola a todos los que est[a] haciendo un compilador nuevo¿n"$
+	decide of
+	є x22<=45 @ var>5.6 э   ¿  |semantico x22, var
+		let int y$
+		x22=10$
+		let char ch33='a'$
+	 ? 
+	elif є x24>=var>5.6 э   ¿ |sintactico
+		let int y$
+		x22=10$
+		let char ch33='a'$
+	? 
+	else  ¿ 
+		let int y$ |no error duplicado en if-else
+		let string str2="sdff"$
+	?
+	
+	for є let int i=0$ step 1 to 10 э do  ¿ output  i  $ ?  |semantico i y j puede dar error sintactico
+	output  "Hola mundo"  $
+	input  x22  $
+	return -5.6$|cambio en retorno genera semantico
+ ?  
+
+ bool func2  є bool b1, int i1 э   ¿ 
+	let int a $ |sintactico
+	return$ |generar error con -5.6 y con i1
+  ?  
+
+string func3  є  э   ¿  |semantico string
+	let string b1$
+	return b1$ 
+  ? 
+
+
