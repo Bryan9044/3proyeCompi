@@ -17,8 +17,8 @@ public class Principal {
         //"/src/codigo/ejemplo código 2.sintactico.base 3.txt"
         
         //JflexCup.generateFiles();
-        //JflexCup.probarParser(rutaTxt);
-        TraduccionMips.traducirArchivoC3D(rutaC3D);
+        JflexCup.probarParser(rutaTxt);
+        //TraduccionMips.traducirArchivoC3D(rutaC3D);
         //TraduccionMips.traducirLinea(rutaC3D);
     }
 }

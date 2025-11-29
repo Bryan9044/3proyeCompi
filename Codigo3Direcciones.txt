@@ -1,52 +1,10 @@
 
 inicio principal:
 
-t1 = 2;
-
 data_int y:
 
-y = t1;
+t1 = "hola";
 
-t2 = 3;
-
-data_int x:
-
-x = t2;
-
-t3 = 4;
-
-data_int b:
-
-b = t3;
-
-t4 = 5;
-
-data_int a:
-
-a = t4;
-
-t5 = y + x;
-
-t6 = 3;
-
-t7 = t5 - t6;
-
-t8 = t7 < a;
-
-data_bool z:
-
-z = t8;
-
-t9 = y == x;
-
-data_bool w:
-
-w = t9;
-
-t10 = b != a;
-
-data_bool v:
-
-v = t10;
+output  = t1;
 
 fin principal

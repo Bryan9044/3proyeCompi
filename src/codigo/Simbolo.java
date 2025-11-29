@@ -11,6 +11,7 @@ package codigo;
 public class Simbolo {
     private String simbolo;
     private String tipo;
+    private float literal;
     
     public Simbolo(String pSimbolo, String pTipo){
         this.simbolo = pSimbolo;
@@ -24,6 +25,7 @@ public class Simbolo {
     public String getTipo(){
         return tipo;
     }
+    
     
 @Override
    public String toString(){

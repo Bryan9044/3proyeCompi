@@ -869,7 +869,7 @@ start with program;
 
 arithmetic_expression ::= arithmetic_expression:e1 plus_operator term:e2
                           {:  
-                               String[] partesE1 = e1.toString().split("::"); 
+                               String[] partesE1 = e1.toString().split("::");
                                String[] partesE2 = e2.toString().split("::");
                             String verificacion = verifiacionSemanticaAritmeticaBinaria("suma", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
 
@@ -2081,10 +2081,30 @@ array_access ::= identifier:id left_bracket arithmetic_expression:op right_brack
 // input y output
 input_statement ::= input_keyword identifier:i delimiter
                  {: 
-                    
-                    String temp = registroTemporalI();
-                    C3D.append("\n" + "input " + " = " + temp + ";\n");
-                    C3D.append("\n" + i + " = " + temp + ";\n");
+                    //Aquí sería ver si ese identificador existe y si es entero o flotante
+                    reportarErrorNoExisteSimbolo(i);
+                    Simbolo simbolo = buscarSimbolo(i);
+                    if(simbolo != null){
+                        if(!((simbolo.getTipo().equals("int")) | (simbolo.getTipo().equals("float")) ) ){
+                            System.err.println(String.format(
+                            "Error Semantico: La expresion %s es de tipo %s. Debe ser de tipo int o float para poder utilizarse en el input. Linea %s.", 
+                            i, simbolo.getTipo(), ileft+1
+                            ));
+                            erroresSemanticos++;
+                            parser.erroresSemanticos++;
+                        }else{
+                            String temp = registroTemporalI();
+                            C3D.append("\n" + "input " + " = " + temp + ";\n");
+                            C3D.append("\n" + i + " = " + temp + ";\n");
+                        }
+                        
+                    }else{
+                        
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }
+
+                   
                  :}
                  |  input_keyword error delimiter
                  {: System.err.println("Error en input"); :}
@@ -2097,11 +2117,30 @@ input_statement ::= input_keyword identifier:i delimiter
 // FALTAN ERRORES EN OUTPUT
 output_statement ::= output_keyword identifier:i delimiter
                 {: 
+                    //Verificar que el identificador exista y que sea de uno de los tipos permitidos
+                    reportarErrorNoExisteSimbolo(i);
+                    Simbolo simbolo = buscarSimbolo(i);
+                    if(simbolo != null){
+                        if(!((simbolo.getTipo().equals("int")) | (simbolo.getTipo().equals("float")) | (simbolo.getTipo().equals("bool")) | (simbolo.getTipo().equals("string")) ) ){
+                            System.err.println(String.format(
+                            "Error Semantico: La expresion %s es de tipo %s. Debe ser de tipo int, float, bool o string para poder utilizarse en el output. Linea %s.", 
+                            i, simbolo.getTipo(), ileft+1
+                            ));
+                            erroresSemanticos++;
+                            parser.erroresSemanticos++;
+                        }else{
+                           String temp = registroTemporalI();
+                           C3D.append("\n" + "output " + " = " + temp + ";\n");
+                           C3D.append("\n" + i + " = " + temp + ";\n");
+                        }
+                        
+                    }else{
+                        
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }
                     
                     
-                    String temp = registroTemporalI();
-                    C3D.append("\n" + "output " + " = " + temp + ";\n");
-                    C3D.append("\n" + i + " = " + temp + ";\n");
                     
                 :}
                   |  output_keyword int_literal:i delimiter
@@ -2128,13 +2167,7 @@ output_statement ::= output_keyword identifier:i delimiter
                         C3D.append("\n" + "output " + " = " + temp + ";\n");
                                                 
                         :}
-                  |  output_keyword CHAR_LITERAL:c delimiter
-                    {: 
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + c + ";\n");
-                        C3D.append("\n" + "output " + " = " + temp + ";\n");
-                                              
-                        :}
+               
                   |  output_keyword STRING_LITERAL:s delimiter
                     {: 
                          
