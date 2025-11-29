@@ -1,4 +1,9 @@
+int a є э ¿
+    let int y$
+    output 5$
+?
+
 void principal є э ¿
     let int y$
-    output $
+    output 5$
 ?

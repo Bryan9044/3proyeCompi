@@ -843,7 +843,6 @@ non terminal function_helper;
 non terminal function_helperF;
 non terminal function_helperB;
 non terminal function_helperC;
-non terminal function_helperS;
 
 
 // Por úlitmo un orden precendencia para el cup
@@ -2658,13 +2657,6 @@ function_helperC ::= char_keyword
     :};
 
 
-function_helperS ::= string_keyword 
-{: 
-    contadorTemporalINT = 1;
-    contadorTemporalFLOAT = 1;
-    C3D.append("\n" + "inicio_funcionString" + contadorFuncSTRING + ":\n");
-    funcString = true; 
-    :};
 
 
 
@@ -2703,14 +2695,6 @@ function_left ::=
 
                     //Agregar a la tabla de funciones
                     agregarFuncion(id, "char", (idleft + 1));
-                :}
-            |  function_helperS identifier:id
-                {: 
-                    TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
-                    apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
-
-                    //Agregar a la tabla de funciones
-                    agregarFuncion(id, "string", (idleft + 1));
                 :}
             ;
 

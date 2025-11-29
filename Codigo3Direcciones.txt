@@ -1,9 +1,19 @@
 
+inicio_funcionInt1:
+
+data_int y:
+
+t1 = 5;
+
+output  = t1;
+
+fin_funcion1:
+
 inicio principal:
 
 data_int y:
 
-t1 = "hola";
+t1 = 5;
 
 output  = t1;
 
