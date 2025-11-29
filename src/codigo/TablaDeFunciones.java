@@ -130,6 +130,22 @@ public class TablaDeFunciones {
         
         return retorno;
     }
+    //Verifica si el nombre del símbolo de la entrada es un parámetro de la función
+    //Retorna true si el simbolo de la entrada se encuentra en los parámetros y false en caso contrario
+    public boolean esParametro(String nombreFuncion, String pSimbolo){
+        ArrayList<Simbolo> simbolos;
+        for(TablaDeSimbolos funcion : funciones){
+            if(funcion.getNombre().equalsIgnoreCase(nombreFuncion)){
+                simbolos = funcion.getSimbolos();
+                for(Simbolo simbolo : simbolos){
+                    if(simbolo.getSimbolo().equals(pSimbolo)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
     
     
             

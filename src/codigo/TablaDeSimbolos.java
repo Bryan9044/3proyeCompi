@@ -105,6 +105,16 @@ public class TablaDeSimbolos {
         return retorno; //Si nunca lo encuentra va a retornar null
     }
     
+    //Verifica si en la tabla actual existe el símbolo y lo retorna
+    public Simbolo obtenerSimboloScopeActual(String pSimbolo){
+        for(int i = 0; i < simbolos.size(); i++){
+            if(simbolos.get(i).getSimbolo().equals(pSimbolo) ){
+                return simbolos.get(i); //Retorno el símbolo 
+            }
+        }
+        return null; //Retorno null
+    }
+    
     //Itera la tabla de símbolos de la entrada y si encuentra el símbolo buscado lo retorna
     private Simbolo existeEnLaTabla(ArrayList<Simbolo> pSimbolos, String pSimbolo){
         for(Simbolo simbolo : pSimbolos){

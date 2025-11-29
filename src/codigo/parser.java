@@ -1505,13 +1505,52 @@ class CUP$parser$actions {
 
     //Añade a la tabla actual el símbolo indicado. VERIFICAR SI EL SÍMBOLO YA ESTÁ EN LA TABLA ACTUAL.
     public void agregarSimbolo(String pTipo, String pSimbolo){
+        //Verifico que el símbolo no sea un parámetro
+        boolean validacionFuncion = tablaDeFunciones.esParametro(funcionActual, pSimbolo);
+        if (validacionFuncion){
+            System.err.println("Error Semantico: El identificador " + pSimbolo + " ha sido declarado previamente como parametro de esta funcion.");
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return;
+        }
+    
+        //Verifico que este símbolo no se encuentre en la tabla actual 
+        System.out.println("Funcion: " + funcionActual);
+        Simbolo a = tablaActual.obtenerSimboloScopeActual(pSimbolo);
+        if(a != null){
+            System.err.println("Error Semantico: El identificador " + pSimbolo + " ya ha sido declarado previamente en este scope.");
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return;
+        }
+        
+        
+        
         
         tablaActual.agregarSimbolo(new Simbolo(pSimbolo, pTipo));
     }
 
     //Añade a la tabla actual el símbolo indicado. VERIFICAR SI EL SÍMBOLO YA ESTÁ EN LA TABLA ACTUAL.
     public void agregarSimboloArray(String pTipo, String pSimbolo, String pTamanio, ArrayList<Simbolo> pElementosArreglo){
-        
+        //Verifico que el símbolo no sea un parámetro
+        boolean validacionFuncion = tablaDeFunciones.esParametro(funcionActual, pSimbolo);
+        if (validacionFuncion){
+            System.err.println("Error Semantico: El identificador " + pSimbolo + " ha sido declarado previamente como parametro de esta funcion.");
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return;
+        }
+    
+        //Verifico que este símbolo no se encuentre en la tabla actual 
+        System.out.println("Funcion: " + funcionActual);
+        Simbolo a = tablaActual.obtenerSimboloScopeActual(pSimbolo);
+        if(a != null){
+            System.err.println("Error Semantico: El identificador " + pSimbolo + " ya ha sido declarado previamente en este scope.");
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return;
+        }
+
         tablaActual.agregarSimbolo(new SimboloArreglo(pSimbolo, pTipo, pTamanio, pElementosArreglo));
     }
     
@@ -1559,6 +1598,43 @@ class CUP$parser$actions {
         } else {
             System.err.println(String.format(
                 "Error Semantico: Ambos operandos en la %s de la linea %s deben ser enteros o flotantes.",
+                operacion, linea1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            return "null";
+        }
+    }
+
+public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+        boolean tipo1b = true;
+        boolean tipo2b = true;
+
+        if(!(tipo1.equals("int"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando izquierdo de la %s en la linea %s columna %s debe ser entero.", 
+                operacion, linea1, columna1
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo1b = false;
+        }
+
+        if(!(tipo2.equals("int"))){
+            System.err.println(String.format(
+                "Error Semantico: El operando derecho de la %s en la linea %s columna %s debe ser entero.",
+                operacion, linea2, columna2
+            ));
+            erroresSemanticos++;
+            parser.erroresSemanticos++;
+            tipo2b = false;
+        }
+
+        if(tipo1b && tipo2b && tipo1.equals(tipo2)){
+            return tipo1;
+        } else {
+            System.err.println(String.format(
+                "Error Semantico: Ambos operandos en la %s de la linea %s deben ser enteros.",
                 operacion, linea1
             ));
             erroresSemanticos++;
@@ -2085,7 +2161,7 @@ class CUP$parser$actions {
 		 
         String[] partesE1 = e1.toString().split("::");
         String[] partesE2 = e2.toString().split("::");
-        String verificacion = verifiacionSemanticaAritmeticaBinaria("modulo", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+        String verificacion = verifiacionSemanticaAritmeticaSoloEnteros("modulo", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
        
         String moduloIzq = partesE1[0]; // parte izquierda del modulo entera
         String moduloDer = partesE2[0]; // parte derecha del moduloentera
@@ -2136,7 +2212,7 @@ class CUP$parser$actions {
             //Voy a dejarlo de igual manera que ambos sean enteros o flotantes
             String[] partesE1 = e1.toString().split("::");
             String[] partesE2 = e2.toString().split("::");
-            String verificacion = verifiacionSemanticaAritmeticaBinaria("potencia", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
+            String verificacion = verifiacionSemanticaAritmeticaSoloEnteros("potencia", partesE1[1], partesE2[1], partesE1[2], partesE2[2], partesE1[3], partesE2[3]);
 
 
         String elevadoIzq = partesE1[0]; // parte izquierda de la potencia

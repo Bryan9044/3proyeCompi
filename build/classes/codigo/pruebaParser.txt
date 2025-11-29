@@ -1,9 +1,13 @@
 int a є э ¿
-    let int y$
+    let int y = 52%3.2$
     output 5$
+    let float a$
+    return "a"$
+
 ?
 
 void principal є э ¿
-    let int y$
+    let int a$
     output 5$
+    let char a[5]$
 ?
