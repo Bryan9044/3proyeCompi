@@ -5524,6 +5524,31 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
 		String id = (String)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
 		 
+                //Verifico que exista la función
+                boolean existeLaFuncion = tablaDeFunciones.existeLaFuncion(id);
+                if(existeLaFuncion){
+                    // Verificar que la cantidad de parámetros coincida
+                    boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, 0);
+                    if(cantidadParametros){
+                        RESULT = id + "::" 
+                               + tablaDeFunciones.obtenerTipoFuncion(id) 
+                               + "::" + (idleft + 1) 
+                               + "::" + idright;
+                    }else{
+                        System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " 
+                                            + id + " no es correcta. Se esperaban " 
+                                            + tablaDeFunciones.cantidadDeParametros(id) 
+                                            + " .Linea " + (idleft + 1));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }
+                }else{
+                    System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " 
+                                        + id + " .Linea " + (idleft + 1));
+                    erroresSemanticos++;
+                    parser.erroresSemanticos++;
+                }
+                
                RESULT = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_call",43, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }

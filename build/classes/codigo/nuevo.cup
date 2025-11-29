@@ -2971,6 +2971,31 @@ return_statement ::= return_keyword:r delimiter
 
 function_call ::= identifier:id left_parenthesis right_parenthesis
                {: 
+                //Verifico que exista la función
+                boolean existeLaFuncion = tablaDeFunciones.existeLaFuncion(id);
+                if(existeLaFuncion){
+                    // Verificar que la cantidad de parámetros coincida
+                    boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, 0);
+                    if(cantidadParametros){
+                        RESULT = id + "::" 
+                               + tablaDeFunciones.obtenerTipoFuncion(id) 
+                               + "::" + (idleft + 1) 
+                               + "::" + idright;
+                    }else{
+                        System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " 
+                                            + id + " no es correcta. Se esperaban " 
+                                            + tablaDeFunciones.cantidadDeParametros(id) 
+                                            + " .Linea " + (idleft + 1));
+                        erroresSemanticos++;
+                        parser.erroresSemanticos++;
+                    }
+                }else{
+                    System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " 
+                                        + id + " .Linea " + (idleft + 1));
+                    erroresSemanticos++;
+                    parser.erroresSemanticos++;
+                }
+                
                RESULT = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;:}
                |  identifier:id left_parenthesis args:ar right_parenthesis
                {:
