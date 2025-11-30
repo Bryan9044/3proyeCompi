@@ -1,20 +1,40 @@
 
 inicio_funcionInt1:
 
+t1 = 52;
+
+t2 = 3;
+
+t3 = t1 % t2;
+
 data_int y:
 
-t1 = 5;
+y = t3;
 
-output  = t1;
+t4 = 5;
+
+output  = t4;
+
+data_float a:
+t5 = 5;
+return t5;
 
 fin_funcion1:
 
 inicio principal:
 
-data_int y:
+data_int a:
 
 t1 = 5;
 
-output  = t1;
+t2 = 2;
+
+t3 = t1 * t2;
+
+a = t3;
+
+t4 = a;
+
+a = t4;
 
 fin principal

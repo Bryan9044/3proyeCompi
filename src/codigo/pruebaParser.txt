@@ -1,13 +1,14 @@
 int a є э ¿
-    let int y = 52%3.2$
+    let int y = 52%3$
     output 5$
     let float a$
-    return "a"$
+    return 5$
 
 ?
 
 void principal є э ¿
     let int a$
-    output 5$
-    let char a[5]$
+    a = 5 * 2$
+    a = aє э$
+
 ?

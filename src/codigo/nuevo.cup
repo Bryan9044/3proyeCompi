@@ -139,7 +139,6 @@ action code {:
         }
     
         //Verifico que este símbolo no se encuentre en la tabla actual 
-        System.out.println("Funcion: " + funcionActual);
         Simbolo a = tablaActual.obtenerSimboloScopeActual(pSimbolo);
         if(a != null){
             System.err.println("Error Semantico: El identificador " + pSimbolo + " ya ha sido declarado previamente en este scope.");
