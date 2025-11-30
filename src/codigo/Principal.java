@@ -11,14 +11,14 @@ package codigo;
 public class Principal {
     public static void main(String[] args)throws Exception{
         String basePath = System.getProperty("user.dir");
-        String rutaTxt = basePath + "/src/codigo/pruebaParser.txt";
+        String rutaTxt = basePath + "/src/codigo/ejemplo código 1.sintactico.base 3.txt";
         String rutaC3D = "C:/Users/bryan/Documents/CompiProyecto#2/Proyecto2_Compiladores/Programa/Analizador/Codigo3Direcciones.txt";
        
         //"/src/codigo/ejemplo código 2.sintactico.base 3.txt"
         
         //JflexCup.generateFiles();
-        //JflexCup.probarParser(rutaTxt);
-        TraduccionMips.traducirArchivoC3D(rutaC3D);
+        JflexCup.probarParser(rutaTxt);
+        //TraduccionMips.traducirArchivoC3D(rutaC3D);
         //TraduccionMips.traducirLinea(rutaC3D);
     }
 }
