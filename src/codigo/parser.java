@@ -1605,7 +1605,7 @@ class CUP$parser$actions {
         }
     }
 
-public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+    public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
         boolean tipo1b = true;
         boolean tipo2b = true;
 
@@ -2394,14 +2394,32 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		
                             //Revisar que la expresión sea booleana
                             String[] partesExpresion = e.toString().split("::");
+                            
                             if(!(partesExpresion[1].equals("bool"))){
                                 //Error 
                                 System.err.println("Error Semantico: La expresion " + partesExpresion[0] + " debe ser de tipo booleano para poder aplicarle la negacion. Linea "+ (ileft +1));
                                 erroresSemanticos++;
                                 parser.erroresSemanticos++;
-                                RESULT = "Σ"+ partesExpresion[0] + "::null::" + (ileft +1) + "::" + iright;
-                            }else{
-                                RESULT = "/"+ partesExpresion[0] + "::bool::" + (ileft +1) + "::" + iright;
+                                RESULT = "null::null::" + (ileft +1) + "::" + iright;
+                            } else {
+                                String operando;
+                                if (partesExpresion.length > 4) {
+                                    operando = partesExpresion[4];  // Si es expresión compleja
+                                } else {
+                                    operando = partesExpresion[0];  // Si es simple
+                                }
+                                
+                            
+                                if (!esTemporal(operando) && esLiteralVerdadero(operando)) {
+                                    String tempOp = registroTemporalI();
+                                    C3D.append("\n" + tempOp + " = " + operando + ";\n");
+                                    operando = tempOp;
+                                }
+                                
+                                String temp = registroTemporalI();
+                                C3D.append("\n" + temp + " = Σ" + operando + ";\n");
+                                
+                                RESULT = "Σ" + operando + "::bool::" + (ileft +1) + "::" + iright + "::" + temp;
                             }
                         
               CUP$parser$result = parser.getSymbolFactory().newSymbol("arithmetic_operands",6, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3557,9 +3575,8 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                         C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
                         parteUnica = tempExtra;
                     }
-
-                    C3D.append("\n" + "data_intArr " + id + ":\n");
-                    C3D.append("\n" + id + " = " + parteUnica + ";\n");
+                    System.out.println("DEBUG: Tamaño del arreglo = " + partesOperador[0]);
+                    C3D.append("\n" + "data_intArr " + id + "[" + partesOperador[0] + "]:\n");
 
                     RESULT = id;
  
@@ -3683,8 +3700,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                         parteUnica = tempExtra;
                     }
 
-                    C3D.append("\n" + "data_CharArr " + id + ":\n");
-                    C3D.append("\n" + id + " = " + parteUnica + ";\n");
+                    C3D.append("\n" + "data_CharArr " + id + "[" + partesOperador[0] + "]:\n");
 
                     RESULT = id;
 
@@ -3778,11 +3794,29 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                     ArrayList<Simbolo> simbolosArreglo = new ArrayList<>();
                     
                     // Para código 3D
-                    C3D.append("\n" + "data_intArr " + id + ":\n");
+                    
                     
                     // Descomponer tamaño
                     //Descomponer la operación
                     String[] partesOperador = op.toString().split("::");
+                    
+                    String parteUnica;
+                    
+                    // Si la expresión es anidada, el temporal viene en partesOperador[4]
+                    if (partesOperador.length > 4) {
+                        parteUnica = partesOperador[4];
+                    } else {
+                        parteUnica = partesOperador[0]; // literal o identificador
+                    }
+
+                    // Si NO es temporal, creamos uno
+                    if (!continuouNo(parteUnica)) {
+                        String tempExtra = registroTemporalI();
+                        C3D.append("\n" + tempExtra + " = " + parteUnica + ";\n");
+                        parteUnica = tempExtra;
+                    }
+
+
                     //Revvisar el tipo
                     if(!(partesOperador[1].equals("int"))){
                         System.err.println("Error Semantico: tamaño debe ser int. Linea " + (idleft + 1));
@@ -3790,8 +3824,8 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                         parser.erroresSemanticos++;
                     } else {
                         int indice = 0;
-                        
-                        
+                    System.out.println("DEBUG: Tamaño del arreglo = " + partesOperador[0]);    
+                    C3D.append("\n" + "data_intArr " + id + "[" + parteUnica + "]:\n");    
                         for (String elemento : elementosArray){
                             String[] partes = elemento.split(";;");  // recordar [valor, tipo, temporal]
                             
@@ -3911,10 +3945,11 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                     
                     String[] elementosArray = rec.toString().split("::");
                     ArrayList<Simbolo> simbolosArreglo = new ArrayList<>();
-
-                    C3D.append("\n" + "data_CharArr " + id + ":\n");
-
                     String[] partesOperador = op.toString().split("::");
+                    System.out.println("PartesOperador[0]: " + partesOperador[0]);
+                    C3D.append("\n" + "data_CharArr " + id + "[" + partesOperador[0] + "]:\n");
+
+                    
                     if(!(partesOperador[1].equals("int"))){
                         System.err.println(String.format(
                         "Error Semantico: La expresion aritmetica para indicar el tamanio del arrego debe ser de tipo int. Linea %s.", 
@@ -4207,13 +4242,30 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int opleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int opright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object op = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		 //Verificar que exista el arreglo y que la expresión sea entero. Tipo arrayInt o arrayChar 
-                   
+		 
                     String[] posicionArreglo = op.toString().split("::");
-                    String elemento = accederElementoDeArreglo(id, posicionArreglo[0], posicionArreglo[1], (idleft + 1), idright); //valor::tipo::fila::columna
+                    String elemento = accederElementoDeArreglo(id, posicionArreglo[0], posicionArreglo[1], (idleft + 1), idright);
                     
-
-                    RESULT = elemento; //Para guardarlo y proceder con la validación posterior
+                    // GENERAR C3D PARA ACCESO AL ARRAY
+                    String[] partesElemento = elemento.split("::");
+                    if(!partesElemento[1].equals("null")) {
+                        String indice = posicionArreglo[0];
+                        
+                        // Si el índice no es temporal, crear uno
+                        if(!esTemporal(indice) && esLiteralVerdadero(indice)) {
+                            String tempIndice = registroTemporalI();
+                            C3D.append("\n" + tempIndice + " = " + indice + ";\n");
+                            indice = tempIndice;
+                        }
+                        
+                        // Crear temporal para el valor del array
+                        String temp = registroTemporalI();
+                        C3D.append("\n" + temp + " = " + id + "[" + indice + "];\n");
+                        
+                        RESULT = temp + "::" + partesElemento[1] + "::" + partesElemento[2] + "::" + partesElemento[3];
+                    } else {
+                        RESULT = elemento;
+                    }
                 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("array_access",15, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -4239,9 +4291,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                             erroresSemanticos++;
                             parser.erroresSemanticos++;
                         }else{
-                            String temp = registroTemporalI();
-                            C3D.append("\n" + "input " + " = " + temp + ";\n");
-                            C3D.append("\n" + i + " = " + temp + ";\n");
+                            //String temp = registroTemporalI();
+                            C3D.append("\n" + "call input " + i + ";\n");
+                            //C3D.append("\n" + "input " + " = " + temp + ";\n");
+                            //C3D.append("\n" + i + " = " + temp + ";\n");
                         }
                         
                     }else{
@@ -4303,9 +4356,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                             erroresSemanticos++;
                             parser.erroresSemanticos++;
                         }else{
-                           String temp = registroTemporalI();
-                           C3D.append("\n" + "output " + " = " + temp + ";\n");
-                           C3D.append("\n" + i + " = " + temp + ";\n");
+                           //String temp = registroTemporalI();
+                           C3D.append("\n" + "call output " + i +";\n");
+                           //C3D.append("\n" + i + " = " + temp + ";\n");
+                           //C3D.append("\n" + "output " + temp + ";\n");
                         }
                         
                     }else{
@@ -4330,9 +4384,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		String i = (String)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		 
 
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + i + ";\n");
-                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        //String temp = registroTemporalI();
+                        C3D.append("\n" + "call output " + i +";\n");
+                        //C3D.append("\n" + temp + " = " + i + ";\n");
+                        //C3D.append("\n" + "output "  + temp + ";\n");
                         
                         
               CUP$parser$result = parser.getSymbolFactory().newSymbol("output_statement",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -4347,10 +4402,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		String f = (String)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		 
-                        
-                        String temp = registroTemporalF();
-                         C3D.append("\n" + temp + " = " + f + ";\n");
-                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        C3D.append("\n" + "call output " + f +";\n");
+                        //String temp = registroTemporalF();
+                        //C3D.append("\n" + temp + " = " + f + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                                                
 
                     
@@ -4366,9 +4421,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		String b = (String)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		 
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + b + ";\n");
-                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        C3D.append("\n" + "call output " + b +";\n");
+                        //String temp = registroTemporalI();
+                        //C3D.append("\n" + temp + " = " + b + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                                                 
                         
               CUP$parser$result = parser.getSymbolFactory().newSymbol("output_statement",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -4384,10 +4440,10 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		 
                          
-                    
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + s + ";\n");
-                        C3D.append("\n" + "output " + " = " + temp + ";\n");
+                        C3D.append("\n" + "call output " + s +";\n");
+                        //String temp = registroTemporalI();
+                        //C3D.append("\n" + temp + " = " + s + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                         
               CUP$parser$result = parser.getSymbolFactory().newSymbol("output_statement",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -5068,7 +5124,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
               Object RESULT =null;
 		 
             desapilarTablaDeSimbolos();
-            C3D.append("\n" + "goto for_inicio" + contadorFor + ":");
+            C3D.append("\n" + "goto for_hasta"+ ":");
             C3D.append("\n" + "fin_for " + contadorFor + ":\n");
             eliminarDireccionBreak();
             contadorFor++;
@@ -5085,7 +5141,6 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		 
     contadorTemporalINT = 1;
     contadorTemporalFLOAT = 1;
-    C3D.append("\n" + "inicio_funcionInt" + contadorFuncINT + ":\n");
     funcInt = true;
 
     
@@ -5100,7 +5155,6 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		 
     contadorTemporalINT = 1;
     contadorTemporalFLOAT = 1;
-    C3D.append("\n" + "inicio_funcionFloat" + contadorFuncFLOAT + ":\n");
     funcFloat = true; 
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_helperF",55, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5114,7 +5168,6 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		 
     contadorTemporalINT = 1;
     contadorTemporalFLOAT = 1;    
-    C3D.append("\n" + "inicio_funcionBool" + contadorFuncBOOL + ":\n");
     funcBool = true; 
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_helperB",56, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5128,7 +5181,6 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		 
     contadorTemporalINT = 1;
     contadorTemporalFLOAT = 1;    
-    C3D.append("\n" + "inicio_funcionChar" + contadorFuncCHAR + ":\n");
     funcChar = true; 
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_helperC",57, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5143,7 +5195,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String id = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		 
-                     
+                    C3D.append("\n"+ id + ":\n");
                     TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
                     apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
 
@@ -5162,6 +5214,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String id = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		 
+                    C3D.append("\n"+ id + ":\n");
                     TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
                     apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
 
@@ -5180,6 +5233,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String id = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+                    C3D.append("\n"+ id + ":\n");
                     TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
                     apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
                     
@@ -5198,6 +5252,7 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String id = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		 
+                    C3D.append("\n"+ id + ":\n");
                     TablaDeSimbolos t = crearTablaDeSimbolos(id); //Crear la nueva tabla
                     apilarNuevaTablaDeSimbolos(t); //Se coloca esta tabla como la actual y la que estaba en esa variable como la anterior de esta
 
@@ -5216,42 +5271,44 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int varright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object var = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		 
+            
                 int cont = contadorTemporalINT - 1;
+                String nombreFuncion = funcionActual;
                 if(funcInt == true){
-                C3D.append("\n" + "fin_funcion" + contadorFuncINT + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncINT++;
                 funcInt = false;
                 }
                 if ( funcFloat == true){
-                C3D.append("\n" + "fin_funcionFloat" + contadorFuncFLOAT + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalFLOAT++;
                 contadorFuncFLOAT++;
                 funcFloat = false;
 
                 }
                 if (funcBool == true){
-                C3D.append("\n" + "fin_funcionBool" + contadorFuncBOOL + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncBOOL++;
                 funcBool = false;
 
                 }
                 if (funcChar == true){
-                C3D.append("\n" + "fin_funcionChar" + contadorFuncCHAR + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncCHAR++;
                 funcChar = false;
 
                 }
                 if (funcString == true){
-                C3D.append("\n" + "fin_funcionString" + contadorFuncSTRING + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncSTRING++;
                 funcString = false;
                 }
                 if (funcVoid == true){
-                C3D.append("\n" + "fin_funcionVoid" + contadorFuncVOID + ":\n");
+                C3D.append("\nfin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncVOID++;
                 funcVoid = false;
@@ -5271,17 +5328,18 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
             {
               Object RESULT =null;
 		 
+                String nombreFuncion = funcionActual;
                 int cont = contadorTemporalINT - 1;
                 if(funcInt == true){
-                C3D.append("\n" + "return " + "t" +cont + ":\n");
-                C3D.append("\n" + "fin_funcion" + contadorFuncINT + ":\n");
+                C3D.append("\nreturn t" + cont + ";\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 funcInt = false;
                 }
 
                 if ( funcFloat == true){
-                C3D.append("\n" + "return " + "t" +cont + ":\n");
-                C3D.append("\n" + "fin_funcionFloat" + contadorFuncFLOAT + ":\n");
+                C3D.append("\nreturn f" + cont + ";\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalFLOAT++;
                 contadorFuncFLOAT++;
                 funcFloat = false;
@@ -5289,30 +5347,30 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                 }
 
                 if (funcBool == true){
-                C3D.append("\n" + "return " + "t" +cont + ":\n");
-                C3D.append("\n" + "fin_funcionBool" + contadorFuncBOOL + ":\n");
+                C3D.append("\nreturn t" + cont + ";\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncBOOL++;
                 funcBool = false;
 
                 }
                 if (funcChar == true){
-                C3D.append("\n" + "return " + "t" +cont + ":\n");
-                C3D.append("\n" + "fin_funcionChar" + contadorFuncCHAR + ":\n");
+                C3D.append("\nreturn t" + cont + ";\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncCHAR++;
                 funcChar = false;
 
                 }
                 if (funcString == true){
-                C3D.append("\n" + "return " + "t" +cont + ":\n");
-                C3D.append("\n" + "fin_funcionString" + contadorFuncSTRING + ":\n");
+                C3D.append("\nreturn t" + cont + ";\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncSTRING++;
                 funcString = false;
                 }
                 if (funcVoid == true){
-                C3D.append("\n" + "fin_funcionVoid" + contadorFuncVOID + ":\n");
+                C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncVOID++;
                 funcVoid = false;
@@ -5529,10 +5587,23 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                     // Verificar que la cantidad de parámetros coincida
                     boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, 0);
                     if(cantidadParametros){
-                        RESULT = id + "::" 
-                               + tablaDeFunciones.obtenerTipoFuncion(id) 
-                               + "::" + (idleft + 1) 
-                               + "::" + idright;
+                        String tipoRetorno = tablaDeFunciones.obtenerTipoFuncion(id);
+                        String temp;
+                        
+                        if(tipoRetorno.equals("float")) {
+                            temp = registroTemporalF();
+                            C3D.append("\n" + temp + " = call " + id + ";\n");
+                            RESULT = temp + "::" + tipoRetorno + "::" + (idleft + 1) + "::" + idright;
+                        } else if(tipoRetorno.equals("void")) {
+                            // Para void, no necesitamos temporal de retorno
+                            C3D.append("\ncall " + id + ";\n");
+                            RESULT = id + "::" + tipoRetorno + "::" + (idleft + 1) + "::" + idright;
+                        } else {
+                            temp = registroTemporalI();
+                            C3D.append("\n" + temp + " = call " + id + ";\n");
+                            RESULT = temp + "::" + tipoRetorno + "::" + (idleft + 1) + "::" + idright;
+                        }
+
                     }else{
                         System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " 
                                             + id + " no es correcta. Se esperaban " 
@@ -5540,15 +5611,16 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
                                             + " .Linea " + (idleft + 1));
                         erroresSemanticos++;
                         parser.erroresSemanticos++;
+                        RESULT = "null::null::" + (idleft + 1) + "::" + idright;
                     }
                 }else{
                     System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " 
                                         + id + " .Linea " + (idleft + 1));
                     erroresSemanticos++;
                     parser.erroresSemanticos++;
+                    RESULT = "null::null::" + (idleft + 1) + "::" + idright;
                 }
-                
-               RESULT = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;
+               
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_call",43, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -5564,45 +5636,74 @@ public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String 
 		int arright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object ar = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-                    //Verificaciones. En ar se tiene algo así por ejemplo a::null;;b::null;;1::int;;1.2::float donde es valor::tipo;;valor::tipo...
-                    boolean existeLaFuncion = tablaDeFunciones.existeLaFuncion(id);
-                    String retorno = id + "::null::" + (idleft + 1) + "::" + idright;
-                    if(existeLaFuncion){
-                        //Verificar que la cantidad de parámetros sea la misma
-                        String[] parametros = ar.toString().split(";;");
-                        boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, parametros.length);
-                        if(cantidadParametros){
-                            //Verificar que el orden de los tipos sea el correcto
-                            ArrayList<String> tipos = new ArrayList<>();
+                        boolean existeLaFuncion = tablaDeFunciones.existeLaFuncion(id);
+                        String retorno = id + "::null::" + (idleft + 1) + "::" + idright;
+                        
+                        if(existeLaFuncion){
+                            String[] parametros = ar.toString().split(";;");
+                            boolean cantidadParametros = tablaDeFunciones.coincideLaCantidadDeParametros(id, parametros.length);
+                            
+                            if(cantidadParametros){
+                                ArrayList<String> tipos = new ArrayList<>();
+                                for (String elemento : parametros) {
+                                    String[] partes = elemento.split("::"); 
+                                    tipos.add(partes[1]);               
+                                }
 
-                            for (String elemento : parametros) {
-                                String[] partes = elemento.split("::"); 
-                                tipos.add(partes[1]);               
-                            }
-
-                            boolean coincidenLosParametros = tablaDeFunciones.coincidenLosTiposDeLosParametros(id, tipos);
-                            if(coincidenLosParametros){
-                                //Se pone el tipo de la función, ya pasó las verificaciones
-                                retorno = id + "::" + tablaDeFunciones.obtenerTipoFuncion(id) + "::"+ (idleft + 1) + "::" + idright;
+                                boolean coincidenLosParametros = tablaDeFunciones.coincidenLosTiposDeLosParametros(id, tipos);
+                                
+                                if(coincidenLosParametros){
+                                    // GENERAR C3D PARA PARÁMETROS
+                                    for (String parametro : parametros) {
+                                        String[] partes = parametro.split("::");
+                                        if(partes.length >= 2) {
+                                            String valor = partes[0];
+                                            String tipo = partes[1];
+                                            
+                                            // Si es literal, crear temporal
+                                            if (!esTemporal(valor) && esLiteralVerdadero(valor)) {
+                                                String tempParam = veoTipo(tipo);
+                                                C3D.append("\n" + tempParam + " = " + valor + ";\n");
+                                                valor = tempParam;
+                                            }
+                                            
+                                            // Generar param
+                                            C3D.append("param " + tipo + " " + valor + ";\n");
+                                        }
+                                    }
+                                    
+                                    // GENERAR LLAMADA
+                                    String tipoRetorno = tablaDeFunciones.obtenerTipoFuncion(id);
+                                    String temp;
+                                    
+                                    if(tipoRetorno.equals("float")) {
+                                        temp = registroTemporalF();
+                                    } else {
+                                        temp = registroTemporalI();
+                                    }
+                                    
+                                    C3D.append(temp + " = call " + id + ";\n");
+                                    
+                                    retorno = temp + "::" + tipoRetorno + "::" + (idleft + 1) + "::" + idright;
+                                    
+                                }else{
+                                    System.err.println("Error Semantico: No coinciden los tipos de los parametros indicados en la funcion " + id + " Se esperaba: " + tablaDeFunciones.obtenerListaDeTiposDeParametros(id)+ " .Linea " + (idleft + 1)); 
+                                    erroresSemanticos++;
+                                    parser.erroresSemanticos++;
+                                }
                             }else{
-                                System.err.println("Error Semantico: No coinciden los tipos de los parametros indicados en la funcion " + id + " Se esperaba: " + tablaDeFunciones.obtenerListaDeTiposDeParametros(id)+ " .Linea " + (idleft + 1)); 
+                                System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " + id + " no es correcta. Se esperaban " + tablaDeFunciones.cantidadDeParametros(id)+ " .Linea " + (idleft + 1)); 
                                 erroresSemanticos++;
                                 parser.erroresSemanticos++;
                             }
                         }else{
-                            System.err.println("Error Semantico: La cantidad de parametros indicada en el llamado a la funcion " + id + " no es correcta. Se esperaban " + tablaDeFunciones.cantidadDeParametros(id)+ " .Linea " + (idleft + 1)); 
+                            System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " + id + " .Linea " + (idleft + 1)); 
                             erroresSemanticos++;
                             parser.erroresSemanticos++;
-                            
                         }
-                    }else{
-                         System.err.println("Error Semantico: No se ha declarado una funcion con el nombre " + id + " .Linea " + (idleft + 1)); 
-                         erroresSemanticos++;
-                         parser.erroresSemanticos++;
-                    }
-                    RESULT = retorno; //Se coloca el valor de retorno en el RESULT para posteriores validaciones   id de la funcion::tipo
+                        
+                        RESULT = retorno;
                     
-                
               CUP$parser$result = parser.getSymbolFactory().newSymbol("function_call",43, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

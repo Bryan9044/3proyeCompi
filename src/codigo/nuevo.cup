@@ -139,7 +139,6 @@ action code {:
         }
     
         //Verifico que este símbolo no se encuentre en la tabla actual 
-        System.out.println("Funcion: " + funcionActual);
         Simbolo a = tablaActual.obtenerSimboloScopeActual(pSimbolo);
         if(a != null){
             System.err.println("Error Semantico: El identificador " + pSimbolo + " ya ha sido declarado previamente en este scope.");
@@ -230,7 +229,7 @@ action code {:
         }
     }
 
-public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
+    public String verifiacionSemanticaAritmeticaSoloEnteros(String operacion,String tipo1, String tipo2, String linea1, String linea2, String columna1, String columna2){
         boolean tipo1b = true;
         boolean tipo2b = true;
 
@@ -1949,9 +1948,9 @@ array_declaration ::= let_keyword int_keyword identifier:id left_bracket arithme
                     // Descomponer tamaño
                     //Descomponer la operación
                     String[] partesOperador = op.toString().split("::");
-
+                    
                     String parteUnica;
-
+                    
                     // Si la expresión es anidada, el temporal viene en partesOperador[4]
                     if (partesOperador.length > 4) {
                         parteUnica = partesOperador[4];
@@ -2026,10 +2025,11 @@ array_declaration ::= let_keyword int_keyword identifier:id left_bracket arithme
                     
                     String[] elementosArray = rec.toString().split("::");
                     ArrayList<Simbolo> simbolosArreglo = new ArrayList<>();
-
+                    String[] partesOperador = op.toString().split("::");
+                    System.out.println("PartesOperador[0]: " + partesOperador[0]);
                     C3D.append("\n" + "data_CharArr " + id + "[" + partesOperador[0] + "]:\n");
 
-                    String[] partesOperador = op.toString().split("::");
+                    
                     if(!(partesOperador[1].equals("int"))){
                         System.err.println(String.format(
                         "Error Semantico: La expresion aritmetica para indicar el tamanio del arrego debe ser de tipo int. Linea %s.", 
@@ -2219,9 +2219,10 @@ input_statement ::= input_keyword identifier:i delimiter
                             erroresSemanticos++;
                             parser.erroresSemanticos++;
                         }else{
-                            String temp = registroTemporalI();
-                            C3D.append("\n" + "input " + " = " + temp + ";\n");
-                            C3D.append("\n" + i + " = " + temp + ";\n");
+                            //String temp = registroTemporalI();
+                            C3D.append("\n" + "call input " + i + ";\n");
+                            //C3D.append("\n" + "input " + " = " + temp + ";\n");
+                            //C3D.append("\n" + i + " = " + temp + ";\n");
                         }
                         
                     }else{
@@ -2255,9 +2256,10 @@ output_statement ::= output_keyword identifier:i delimiter
                             erroresSemanticos++;
                             parser.erroresSemanticos++;
                         }else{
-                           String temp = registroTemporalI();
-                           C3D.append("\n" + i + " = " + temp + ";\n");
-                           C3D.append("\n" + "output " + temp + ";\n");
+                           //String temp = registroTemporalI();
+                           C3D.append("\n" + "call output " + i +";\n");
+                           //C3D.append("\n" + i + " = " + temp + ";\n");
+                           //C3D.append("\n" + "output " + temp + ";\n");
                         }
                         
                     }else{
@@ -2272,35 +2274,37 @@ output_statement ::= output_keyword identifier:i delimiter
                   |  output_keyword int_literal:i delimiter
                     {: 
 
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + i + ";\n");
-                        C3D.append("\n" + "output "  + temp + ";\n");
+                        //String temp = registroTemporalI();
+                        C3D.append("\n" + "call output " + i +";\n");
+                        //C3D.append("\n" + temp + " = " + i + ";\n");
+                        //C3D.append("\n" + "output "  + temp + ";\n");
                         
                         :}
                   |  output_keyword float_literal:f delimiter
                     {: 
-                        
-                        String temp = registroTemporalF();
-                         C3D.append("\n" + temp + " = " + f + ";\n");
-                        C3D.append("\n" + "output " + temp + ";\n");
+                        C3D.append("\n" + "call output " + f +";\n");
+                        //String temp = registroTemporalF();
+                        //C3D.append("\n" + temp + " = " + f + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                                                
 
                     :}
                   |  output_keyword bool_literal:b delimiter
                     {: 
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + b + ";\n");
-                        C3D.append("\n" + "output " + temp + ";\n");
+                        C3D.append("\n" + "call output " + b +";\n");
+                        //String temp = registroTemporalI();
+                        //C3D.append("\n" + temp + " = " + b + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                                                 
                         :}
                
                   |  output_keyword STRING_LITERAL:s delimiter
                     {: 
                          
-                    
-                        String temp = registroTemporalI();
-                        C3D.append("\n" + temp + " = " + s + ";\n");
-                        C3D.append("\n" + "output " + temp + ";\n");
+                        C3D.append("\n" + "call output " + s +";\n");
+                        //String temp = registroTemporalI();
+                        //C3D.append("\n" + temp + " = " + s + ";\n");
+                        //C3D.append("\n" + "output " + temp + ";\n");
                         :}
                   | output_keyword error delimiter
                   {: System.err.println("Error en output"); :}

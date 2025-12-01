@@ -1,40 +1,217 @@
 
-inicio_funcionInt1:
+prueba1:
 
-t1 = 52;
+data_paramInt a:
 
-t2 = 3;
+data_paramInt b:
 
-t3 = t1 % t2;
+data_paramInt c:
 
-data_int y:
+t1 = 2;
 
-y = t3;
+t2 = a * t1;
 
-t4 = 5;
+a = t2;
 
-output  = t4;
-
-data_float a:
-t5 = 5;
-return t5;
-
-fin_funcion1:
+return t2;
+fin_prueba1:
 
 inicio principal:
 
+t1 = 5;
+param int t1;
+
+t2 = 3;
+param int t2;
+
+t3 = 2;
+param int t3;
+t4 = call prueba1;
+
+data_int enterito:
+
+enterito = t4;
+
+t5 = "hola";
+
+data_string myString:
+
+myString = t5;
+
 data_int a:
 
-t1 = 5;
+t6 = 5;
 
-t2 = 2;
+t7 = 2;
 
-t3 = t1 * t2;
+t8 = t6 * t7;
 
-a = t3;
+a = t8;
 
-t4 = a;
+call output "a";
 
-a = t4;
+call input a;
+
+t9 = 2;
+
+t10 = a * t9;
+
+t11 = 5;
+
+t12 = t10 // t11;
+
+data_intArr arreglo[t12]:
+
+t13 = 2;
+
+t14 = a + t13;
+t15 = 1;
+
+arreglo[t14] = t15;
+
+t16 = 2;
+
+data_CharArr arreglo2[2]:
+
+t17 = 2;
+
+t18 = t17 * a;
+
+t19 = 5;
+
+t20 = t18 + t19;
+
+data_CharArr arreglo3[t20]:
+
+if_1_encabezado:
+
+t21 = 5;
+
+t22 = t21 * a;
+
+t23 = 3;
+
+t24 = 2;
+
+t25 = t23 * t24;
+
+t26 = t22 > t25;
+if t26 goto if_bloque1:
+goto if_2_encabezado;
+
+if_bloque1:
+
+t27 = 5;
+
+data_int b:
+
+b = t27;
+
+if_2_encabezado:
+
+t28 = 2;
+
+t29 = a < t28;
+if t29 goto if_bloque2:
+goto if_3_encabezado;
+
+if_bloque2:
+
+call output "hola";
+
+if_3_encabezado:
+goto if_1_fin;
+
+if_1_fin:
+goto if_1_fin;
+
+if_3_encabezado:
+
+t30 = 2;
+
+t31 = a >= t30;
+if t31 goto if_bloque3;
+goto if_4_encabezado;
+
+if_bloque3:
+
+t32 = 4;
+
+data_int c:
+
+c = t32;
+goto if_1_fin;
+
+if_4_encabezado:
+
+t33 = 5;
+
+data_int d:
+
+d = t33;
+goto if_5_encabezado;
+
+if_5_encabezado:
+goto if_1_fin;
+
+if_1_fin:
+
+t34 = 0;
+
+data_int i:
+
+i = t34;
+
+for_inicio 1:
+
+t35 = 5;
+
+t36 = 2;
+
+t37 = t35 * t36;
+
+t38 = 4;
+
+t39 = t37 + t38;
+
+i = t39;
+
+t40 = 1;
+
+for_stepDO = t40;
+
+t41 = 10;
+
+for_hasta = 10;
+
+t42 = i >= t41;
+
+if t42 goto fin_for1;
+
+t43 = i + 1;
+
+i = t43;
+
+call output i;
+
+goto for_hasta:
+fin_for 1:
+
+f1 = 1.34;
+
+data_float f:
+
+f = f1;
+
+loop_inicio_1:
+
+call output i;
+
+t44 = 12.2;
+
+t45 = f > t44;
+if t45 goto loop_fin_1;
+goto loop_inicio_1;
+loop_fin_1:
 
 fin principal
