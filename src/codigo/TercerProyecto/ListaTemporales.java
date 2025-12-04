@@ -17,8 +17,8 @@ public class ListaTemporales {
     
     public Temporal buscarTemporal(String pNombre){
         for(int i = 0; i < temporales.size(); i++){
-            if(temporal.get(i).nombre.equals(pNombre) ){
-                return temporales.get(i); //Retorno la variable
+            if(temporales.get(i).nombre.equals(pNombre) ){
+                return temporales.get(i); //Retorno el temporal
             }
         }
         return null; //Retorno null

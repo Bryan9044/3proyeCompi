@@ -12,11 +12,11 @@ import java.util.ArrayList;
 public class TablaDeVariablesMips {
     public String nombre; //Es para el nombre de la función o scope
     public ArrayList<VariableMips> variables = new ArrayList<>();
-    public TablaDeVariablesMips anterior; //Tabla anterior en la jerarquía
+    public ArrayList<VariableMips> globales = new ArrayList<>();
     
     public TablaDeVariablesMips(String pNombre){
         this.nombre = pNombre;
-        this.anterior = null;
+ 
     }
     
     //Agrego la variable a la lista
@@ -25,11 +25,21 @@ public class TablaDeVariablesMips {
     }
     
     public VariableMips obtenerVariable(String pNombre){
-        for(int i = 0; i < variables.size(); i++){
-            if(variables.get(i).nombre.equals(pNombre) ){
-                return variables.get(i); //Retorno la variable
-            }
+
+    // Buscar primero en variables locales
+    for (int i = variables.size() - 1; i >= 0; i--) {
+        if (variables.get(i).nombre.equals(pNombre)) {
+            return variables.get(i);
         }
-        return null; //Retorno null
     }
+
+    // Buscar en las globales
+    for (int i = 0; i < globales.size(); i++) {
+        if (globales.get(i).nombre.equals(pNombre)) {
+            return globales.get(i);
+        }
+    }
+
+    return null;
+}
 }

@@ -1284,10 +1284,12 @@ public class parser extends java_cup.runtime.lr_parser {
             return false; // sino
         }
     }
-
+    
+    //VER COMO AFECTA ESTE CAMBIO
     public boolean esLiteralVerdadero(String valor){
-        return valor.matches("^-?\\d+(\\.\\d+)?$")  || valor.matches("^'.'$")               
-            || valor.matches("^\".*\"$") || valor.matches("^(True|False)$");     
+        //return valor.matches("^-?\\d+(\\.\\d+)?$")  || valor.matches("^'.'$")               
+          //  || valor.matches("^\".*\"$") || valor.matches("^(True|False)$");  
+        return true;
     }
 
 
@@ -2311,6 +2313,19 @@ class CUP$parser$actions {
                         Simbolo simbolo = buscarSimbolo(n);
                         if(simbolo != null){
                             RESULT =  simbolo.getSimbolo() + "::" + simbolo.getTipo() + "::"  + (nleft +1) + "::" + nright; //valor::tipo::linea::columna
+                            
+                            /*
+                            //Crear un temporal para la asignaci´n
+                            if(simbolo.getTipo().equals("float")){
+                                //Crear un temporal flotante
+                                String temporalIdentificador = registroTemporalF();
+                                C3D.append("\n" + temporalIdentificador + " = " + n + ";\n");
+                            }else{
+                                //Cualquier otro caso va como un int
+                                String temporalIdentificador = registroTemporalI();
+                                C3D.append("\n" + temporalIdentificador + " = " + n + ";\n");
+                            } 
+                            */
                         }else{
                             RESULT = "null::null::" + (nleft + 1) + "::" + nright;
                             erroresSemanticos++;

@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package codigo;
-
+import codigo.TercerProyecto.ConversionMips;
 /**
  *
  * @author dylan
@@ -18,7 +18,8 @@ public class Principal {
         
         //JflexCup.generateFiles();
         JflexCup.probarParser(rutaTxt);
-        //TraduccionMips.traducirArchivoC3D(rutaC3D);
+        ConversionMips.traducirArchivoCodigoTresDirecciones(rutaC3D);
         //TraduccionMips.traducirLinea(rutaC3D);
     }
+    
 }

@@ -464,7 +464,7 @@ public static String revisaDato(String linea){
             if (esRegistroT(op) || esRegistroF(op)){ 
                 continue;
             }
-
+            
             // Si es una variable entonces aumentamos la cantidad de usos
             if (almacenaVars.containsKey(op)) {
                 almacenaVars.get(op).cantidadUsos += 1;
