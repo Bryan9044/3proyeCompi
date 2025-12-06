@@ -3,7 +3,9 @@ int miFunc1 є int a, int b, int c э¿
 ?
 
 void principal є э ¿
-    
+    let float miBombo = 5.2$
+    let float flotancito = 5.2+3.3*miBombo/4.15.4$
+
     let int a$
     a = 1$
     let int b$ 
@@ -28,6 +30,6 @@ void principal є э ¿
         
     ?
     end decide$
-
+    
     
 ?

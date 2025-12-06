@@ -34,7 +34,7 @@ public class ConversionMips {
         try (Scanner lector = new Scanner(archivo)){
             while (lector.hasNextLine()) {
                 linea = lector.nextLine(); //En linea tengo almacenada la actual
-                
+                //System.out.println("Linea: " + linea);
                 //Llamada a función externa que me retorna una acción para realizar en el switch
                 accion = ConversionMips.accionLinea(linea);
                 
@@ -402,7 +402,7 @@ public class ConversionMips {
         
         //Ver si es una asignación a un temporal flotante o entero
         if(ConversionMips.esTemporalT(parteIzquierda) ){
-             String[] operandos = ConversionMips.obtenerOperandos(linea); //Obtengo en una lista los dos operandos
+            String[] operandos = ConversionMips.obtenerOperandos(linea); //Obtengo en una lista los dos operandos
             operandoIzquierdo = operandos[0];
             operandoDerecho = operandos[1];
             
@@ -427,12 +427,23 @@ public class ConversionMips {
             return;
         }if(ConversionMips.esTemporalF(parteIzquierda)){
             //Realizar la operación con flotantes
+            String[] operandos = ConversionMips.obtenerOperandos(linea); //Obtengo en una lista los dos operandos
+            operandoIzquierdo = operandos[0];
+            operandoDerecho = operandos[1];
+            
             int numeroTemporal = ConversionMips.extraerNumero(parteIzquierda);
-            int consecutivoActualEntero = consecutivoTemporalEnteroMips-1;
-            int numeroTemporalOperandoIzquierdo = consecutivoActualEntero - ConversionMips.extraerNumero(operandoIzquierdo);
-            int numeroTemporalOperandoDerecho = consecutivoActualEntero - ConversionMips.extraerNumero(operandoDerecho);
-            operandoIzquierdo = ConversionMips.obtenerRegistroOperadorEntero(numeroTemporalOperandoIzquierdo);
-            operandoDerecho = ConversionMips.obtenerRegistroOperadorEntero(numeroTemporalOperandoDerecho);
+            int consecutivoActualFlotante = consecutivoTemporalFlotanteMips;
+            int numeroTemporalOperandoIzquierdo = consecutivoActualFlotante- (numeroTemporal - ConversionMips.extraerNumero(operandoIzquierdo));
+            int numeroTemporalOperandoDerecho = consecutivoActualFlotante- (numeroTemporal - ConversionMips.extraerNumero(operandoDerecho));
+            operandoIzquierdo = ConversionMips.obtenerRegistroOperadorFlotante(numeroTemporalOperandoIzquierdo);
+            operandoDerecho = ConversionMips.obtenerRegistroOperadorFlotante(numeroTemporalOperandoDerecho);
+            
+            System.out.println("Consecutivo actual flotante: " + consecutivoActualFlotante);
+            System.out.println("Numero temporal izquierdo : " + numeroTemporalOperandoIzquierdo);
+            System.out.println("Numero temporal derecho: " + numeroTemporalOperandoDerecho);
+            System.out.println("Operando izquierdo: " + operandoIzquierdo);
+            System.out.println("Operando derecho: " + operandoDerecho);
+            
             resultado = ConversionMips.realizarOperacionConFlotantes(operandoIzquierdo, operandoDerecho, operador);
             //Agregarlo a la función
             stringTemporal += resultado + "\n";
@@ -442,6 +453,10 @@ public class ConversionMips {
         
         
         
+    }
+    
+    private static String obtenerRegistroOperadorFlotante(int numero){
+        return "$f" + (numero + 4);
     }
     
     /*
@@ -525,15 +540,20 @@ public class ConversionMips {
         String retorno = "";
         switch(operador){
             case "+":
-                retorno = "add.s $t" + consecutivoTemporalFlotanteMips + ", $" + operandoIzquierdo + ", $" + operandoDerecho;
+                retorno = "add.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoIzquierdo + ", " + operandoDerecho + "\n";
+                
                 consecutivoTemporalFlotanteMips++;
                 return retorno;
             case "-":
-                retorno = "sub.s $t" + consecutivoTemporalFlotanteMips + ", $" + operandoIzquierdo + ", $" + operandoDerecho;
+                retorno = "sub.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoIzquierdo + ", " + operandoDerecho + "\n";
                 consecutivoTemporalFlotanteMips++;
                 return retorno;
-            case "//":
-                retorno = "div.s $t" + consecutivoTemporalFlotanteMips + ", $" + operandoIzquierdo + ", $" + operandoDerecho;
+            case "/":
+                retorno = "div.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoIzquierdo + ", " + operandoDerecho + "\n";
+                consecutivoTemporalFlotanteMips++;
+                return retorno;
+            case "*":
+                retorno = "mul.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoIzquierdo + ", " + operandoDerecho + "\n";
                 consecutivoTemporalFlotanteMips++;
                 return retorno;
             default:
@@ -560,6 +580,7 @@ public class ConversionMips {
         }if(linea.startsWith("data_float")){
             //Aquí debo de ver si al final los pongo en el .data
             nombre = linea.replace("data_float", "").replace(":", "").trim();
+            System.out.println("Se declara variable: " + nombre);
             tablaDeVariablesMips.variables.add(new VariableMips("float", "", nombre, posicionActualPila)); //Guardo
                 
             //Ahora voy sumando a la cantidad de la pila
@@ -625,6 +646,42 @@ public class ConversionMips {
             }
             
         }
+        //Caso donde es temporal f la parte izquierda
+        if(ConversionMips.esTemporalF(parteIzquierda)){
+            //Caso donde la parte derecha es un número literal
+            if(parteDerecha.contains(".")){
+                resultado = "li.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + parteDerecha;
+                consecutivoTemporalFlotanteMips++;
+                stringTemporal += resultado + "\n";
+                temporalesTresDirecciones.temporales.add(new Temporal("float", parteDerecha, parteIzquierda)); //Para saber el valor de los temporales por las listas
+                return;
+            }
+            
+            //Caso donde la parte derecha es un registro. Es algo raro que veo pero sería mover
+            if(ConversionMips.esTemporalF(parteDerecha)){
+                int numeroTemporal = ConversionMips.extraerNumero(parteIzquierda);
+                int numeroTemporalOperandoDerecho = consecutivoTemporalFlotanteMips- (numeroTemporal - ConversionMips.extraerNumero(parteDerecha));
+                String operandoDerecho = ConversionMips.obtenerRegistroOperadorFlotante(numeroTemporalOperandoDerecho);
+                resultado = "mov.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoDerecho;
+                consecutivoTemporalFlotanteMips++;
+                stringTemporal += resultado + "\n";
+              
+                return;
+            }
+            
+            //Caso donde la parte derecha es un identificador
+            if(parteDerecha.matches("^_?[a-zA-Z][a-zA-Z0-9_]*$")){
+                //Hay que hacer la descarga al temporal de la pila
+                VariableMips variable = tablaDeVariablesMips.obtenerVariable(parteDerecha);
+                resultado = "l.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + variable.posicionEnLaPila + "($sp)";
+                consecutivoTemporalFlotanteMips++;
+                stringTemporal += resultado + "\n";
+                return;
+            }
+            
+            
+        }
+        
         //Caso donde la parte izquierda es una variable
         if(parteIzquierda.matches("^_?[a-zA-Z][a-zA-Z0-9_]*$")){
             //Caso donde la parte derecha es un temporal
@@ -636,6 +693,13 @@ public class ConversionMips {
                 stringTemporal += resultado + "\n";
                 return;
                 
+            }
+            if(ConversionMips.esTemporalF(parteDerecha)){
+                VariableMips variable = tablaDeVariablesMips.obtenerVariable(parteIzquierda);
+                resultado = "s.s " + ConversionMips.obtenerRegistroOperadorFlotante((consecutivoTemporalFlotanteMips-1)) + ", " + variable.posicionEnLaPila + "($sp) #" + variable.nombre;
+                consecutivoTemporalFlotanteMips = 0; //Se reinicia el consecutivo 
+                stringTemporal += resultado + "\n";
+                return;
             }
         }
     }

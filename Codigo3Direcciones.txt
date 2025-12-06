@@ -21,6 +21,36 @@ fin_miFunc1:
 
 inicio principal:
 
+f1 = 3.2;
+
+data_float miBombo:
+
+miBombo = f1;
+
+f2 = 3.3;
+
+f3 = miBombo;
+
+f4 = f2 * f3;
+
+f5 = f4;
+
+f6 = 4.1;
+
+f7 = f5 / f6;
+
+f8 = 5.2;
+
+f9 = f7;
+
+f10 = f8 + f9;
+
+f11 = f10;
+
+data_float flotancito:
+
+flotancito = f11;
+
 data_int a:
 
 t1 = 1;
