@@ -166,10 +166,12 @@ public class ConversionMips {
     }
     
     private static void declaracionFuncion(String linea){
+        consecutivoTemporalEnteroMips = 0;
+        consecutivoTemporalFlotanteMips = 0;
         String nombreFuncion = linea.substring(0, linea.length() - 1);
         Funcion funcion = funciones.obtenerFuncion(nombreFuncion);
         funcion.cantidadMemoriaRequeridaPila +=4;
-        posicionMemoriaParametroDeclaracion = (funcion.cantidadMemoriaRequeridaPila) + funcion.cantidadMemoriaParametros; //Ya que lo que queremos es la posición entonces al total de memoria hay que restarle 4
+        posicionMemoriaParametroDeclaracion = (funcion.cantidadMemoriaRequeridaPila) + (funcion.cantidadMemoriaParametros-4); //Ya que lo que queremos es la posición entonces al total de memoria hay que restarle 4
         
         //Poner la etiqueta de la función
         stringTemporal += linea + "\n"; //Aquí si ocupa los :
@@ -186,7 +188,7 @@ public class ConversionMips {
         
         //La primer variable de esta tabla va a ser el respaldo del $ra
         tablaDeVariablesMips.variables.add(new VariableMips("int", "desconocido", "$ra", posicionActualPila));
-        posicionActualPila +=4;
+        posicionActualPila += 4; //Arreglado. Es así porque se debe de tener en cuenta los parámetros y el +4 para 
         
         //Guardar en esa posición el resaldo
         stringTemporal += "sw $ra, 0($sp)\n"; //Puedo hacerlo así porque la primer dirección es 0
@@ -197,6 +199,9 @@ public class ConversionMips {
         Esta función no requiere pila
     */
     private static void declaracionFuncionPrincipal(){
+        consecutivoTemporalEnteroMips = 0;
+        consecutivoTemporalFlotanteMips = 0;
+        posicionActualPila = 0;
         stringTemporal += "main:\n";
         tablaDeVariablesMips = new TablaDeVariablesMips("Principal");
         Funcion funcion = funciones.obtenerFuncion("principal");
@@ -240,7 +245,15 @@ public class ConversionMips {
             stringTemporal += "sub $sp, $sp , 4 #Parametro\n";
             //Debo de sumar todo ese valor a los actuales de la tabla de variables
             tablaDeVariablesMips.sumarValorPosicionVariables(4);
+            //Debo de cargar el valor
+            String temporalValor = partes[2].replaceAll(";$", "");  // quita ;
+            int numeroTemporal = ConversionMips.extraerNumero(temporalValor);
+            //int numeroTemporalValor = consecutivoTemporalEnteroMips - numeroTemporal;
+            String temporalOperador = ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips -1);
             
+            //Hacer la carga del valor
+            stringTemporal += "sw " + temporalOperador + ", 0($sp) #Carga en la pila del parámetro";
+            stringTemporal += "\n";
         }
         
         if(partes[1].equals("float")){
@@ -335,7 +348,7 @@ public class ConversionMips {
     return derecha.split("\\s*(//|\\+|-|\\*|/|%|<|>|==|!=|<=|>=|@)\\s*");
     }
     
-    //Verificar si una línea es temporal t
+    //Verificar si una línea es temporal t1
     private static boolean esTemporalT(String linea){
         return linea.charAt(0) == 't' && Character.isDigit(linea.charAt(1));
     }
