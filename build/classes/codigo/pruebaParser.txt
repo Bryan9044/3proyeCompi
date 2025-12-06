@@ -1,22 +1,33 @@
-int miFunc1 є int a, int b, int c, int e, int f э¿
-    let int d = 69$
-    return d + c$
-    return a+b *c *d$
+int miFunc1 є int a, int b, int c э¿
+    return a+b *c$
 ?
 
 void principal є э ¿
-    return$
+    
     let int a$
     a = 1$
     let int b$ 
-    b = 5$
     let bool boolcito$
     let float floatcito$
-    |let int arraycito[5] = ¿5,3?$
-    let int c = miFunc1 є 1, 2, 6, 7, 9 э$
+    let int c = miFunc1єa, 4, 5 э$
     a = 1$
     a = 5 * a + b *2+5+10*5//2+a$
-    b = 5+10+15 * miFunc1єa, 2, 6, 7, 9 э$
-    boolcito = False$
-    return$
+    b = 5+10+15 * miFunc1єa, b, 5 э$
+    let bool boolcito2 = False$
+    let bool prueba = True$
+    decide of
+    є boolcito2 @ prueba э -> ¿
+        let int y = 1$
+    ?
+    є b > a э -> ¿
+        let int x = 2$
+        
+    ?
+    else -> ¿
+        let int z = 3$
+        
+    ?
+    end decide$
+
+    
 ?
