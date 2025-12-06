@@ -91,7 +91,12 @@ public class ConversionMips {
                     case "Return con temporal":
                         ConversionMips.retornoConValor(linea);
                         break;
-                      
+                    case "Fin funcion":
+                        ConversionMips.finFuncion();
+                        break;
+                    case "Fin funcion principal":
+                        ConversionMips.finFuncionPrincipal();
+                        break;
                     default:
                         //System.out.println("No se detectó acción");
                 }
@@ -138,6 +143,9 @@ public class ConversionMips {
             return "Declaracion de parametro de funcion";
         }
         
+        if(linea.equals("fin principal")){
+            return "Fin funcion principal";
+        }
         
         //Verificar si no es la carga de un dato
         if(linea.startsWith("data_")){
@@ -212,7 +220,22 @@ public class ConversionMips {
         return "";
     }
     
-     private static void retornoVacio(){
+    private static void finFuncionPrincipal(){
+        stringTemporal += "addi $sp, $sp, " + funcionActual.cantidadMemoriaRequeridaPila + "\n"; 
+        stringTemporal += "li $v0, 10\n";
+        stringTemporal += "syscall\n";
+    }
+    
+    private static void finFuncion(){
+        //Por si no pusieran retorno hago el syscall con un cero
+        stringTemporal += "li $v0, 0\n";
+        stringTemporal += "lw $ra, 0($sp)\n";
+        //Devolverle a la pila la memoria de la función
+        stringTemporal += "addi $sp, $sp, " + funcionActual.cantidadMemoriaRequeridaPila + "\n"; 
+        stringTemporal += "jr $ra\n";
+    }
+    
+    private static void retornoVacio(){
         //Agrego la linea para salir
         stringTemporal += "li $v0, 10\n";
         stringTemporal += "syscall\n";
@@ -222,7 +245,6 @@ public class ConversionMips {
         //Buscar el temporal
         String temporal = linea.replace("return ", "").replace(";", "").trim();
         if(temporal.contains("t")){
-            System.out.println("Retorno con t");
             String registroRetorno = ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips -1);
             stringTemporal += "move $v0, " + registroRetorno + "\n";
             stringTemporal += "lw $ra, 0($sp)\n";
