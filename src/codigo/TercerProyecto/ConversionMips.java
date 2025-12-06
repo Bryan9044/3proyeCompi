@@ -64,6 +64,28 @@ public class ConversionMips {
                     case "Declaracion de parametro de funcion":
                         ConversionMips.declaracionParametroFuncion(linea);
                         break;
+                    case "Etiqueta estructura":
+                        ConversionMips.copiarEtiqueta(linea);
+                        break;
+                    case "Etiqueta bloque":
+                        ConversionMips.copiarEtiqueta(linea);
+                        break;
+                    case "Etiqueta encabezado":
+                        ConversionMips.copiarEtiqueta(linea);
+                        break;
+                    case "Etiqueta fin":
+                        ConversionMips.copiarEtiqueta(linea);
+                        break;
+                    case "Salto condicional":
+                        ConversionMips.traducirSaltoCondicional(linea);
+                        break;
+                    case "Condicion else":
+                        ConversionMips.traducirElse(linea);
+                        break;
+                    case "Salto incondicional":
+                        ConversionMips.traducirSaltoIncondicional(linea);
+                        break;
+                        
                       
                     default:
                         //System.out.println("No se detectó acción");
@@ -136,15 +158,45 @@ public class ConversionMips {
                 return "Fin funcion";
             }
         }
+        if (linea.matches("^if_bloque\\d+:$")) {
+            return "Etiqueta bloque";
+        }
+        
+        // Para las etiquetas iniciales de if_1_encabezado
+        if (linea.matches("^if_\\d+_encabezado:$")) {
+            return "Etiqueta encabezado";
+        }
+        
+        // Para ejemplos con fin if_1_fin
+        if (linea.matches("^if_\\d+_fin:$")) {
+            return "Etiqueta fin";
+        }
+        
+        // Para ejmplos de if t27 goto if_bloque1:
+        if (linea.startsWith("if ") && linea.contains(" goto ")){
+            return "Salto condicional";
+        }
+        
+        
+        // Para ejmplos de goto if_2_encabezado;
+        if (linea.startsWith("goto ")){
+            return "Salto incondicional";
+        }
+
+        // Para los casos en que ninguna condicion sse cumplio
+        if(linea.startsWith("else")){
+            return "Condicion else";
+        }
         
         //Declaración de función
         if (linea.matches("^_?[a-zA-Z][a-zA-Z0-9_]*:$")) {
             return "Declaracion funcion";
         }
         
-        
-        
-        
+        // Esto es para las condiciones de las estructuras de control
+
+
+   
         return "";
     }
     
@@ -166,12 +218,10 @@ public class ConversionMips {
     }
     
     private static void declaracionFuncion(String linea){
-        consecutivoTemporalEnteroMips = 0;
-        consecutivoTemporalFlotanteMips = 0;
         String nombreFuncion = linea.substring(0, linea.length() - 1);
         Funcion funcion = funciones.obtenerFuncion(nombreFuncion);
         funcion.cantidadMemoriaRequeridaPila +=4;
-        posicionMemoriaParametroDeclaracion = (funcion.cantidadMemoriaRequeridaPila) + (funcion.cantidadMemoriaParametros-4); //Ya que lo que queremos es la posición entonces al total de memoria hay que restarle 4
+        posicionMemoriaParametroDeclaracion = (funcion.cantidadMemoriaRequeridaPila) + funcion.cantidadMemoriaParametros; //Ya que lo que queremos es la posición entonces al total de memoria hay que restarle 4
         
         //Poner la etiqueta de la función
         stringTemporal += linea + "\n"; //Aquí si ocupa los :
@@ -188,7 +238,7 @@ public class ConversionMips {
         
         //La primer variable de esta tabla va a ser el respaldo del $ra
         tablaDeVariablesMips.variables.add(new VariableMips("int", "desconocido", "$ra", posicionActualPila));
-        posicionActualPila += 4; //Arreglado. Es así porque se debe de tener en cuenta los parámetros y el +4 para 
+        posicionActualPila +=4;
         
         //Guardar en esa posición el resaldo
         stringTemporal += "sw $ra, 0($sp)\n"; //Puedo hacerlo así porque la primer dirección es 0
@@ -199,9 +249,6 @@ public class ConversionMips {
         Esta función no requiere pila
     */
     private static void declaracionFuncionPrincipal(){
-        consecutivoTemporalEnteroMips = 0;
-        consecutivoTemporalFlotanteMips = 0;
-        posicionActualPila = 0;
         stringTemporal += "main:\n";
         tablaDeVariablesMips = new TablaDeVariablesMips("Principal");
         Funcion funcion = funciones.obtenerFuncion("principal");
@@ -245,15 +292,7 @@ public class ConversionMips {
             stringTemporal += "sub $sp, $sp , 4 #Parametro\n";
             //Debo de sumar todo ese valor a los actuales de la tabla de variables
             tablaDeVariablesMips.sumarValorPosicionVariables(4);
-            //Debo de cargar el valor
-            String temporalValor = partes[2].replaceAll(";$", "");  // quita ;
-            int numeroTemporal = ConversionMips.extraerNumero(temporalValor);
-            //int numeroTemporalValor = consecutivoTemporalEnteroMips - numeroTemporal;
-            String temporalOperador = ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips -1);
             
-            //Hacer la carga del valor
-            stringTemporal += "sw " + temporalOperador + ", 0($sp) #Carga en la pila del parámetro";
-            stringTemporal += "\n";
         }
         
         if(partes[1].equals("float")){
@@ -348,7 +387,7 @@ public class ConversionMips {
     return derecha.split("\\s*(//|\\+|-|\\*|/|%|<|>|==|!=|<=|>=|@)\\s*");
     }
     
-    //Verificar si una línea es temporal t1
+    //Verificar si una línea es temporal t
     private static boolean esTemporalT(String linea){
         return linea.charAt(0) == 't' && Character.isDigit(linea.charAt(1));
     }
@@ -394,6 +433,18 @@ public class ConversionMips {
                 retorno = "mul " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
                 //retorno += "\nmove " + "$t" + consecutivoTemporalEnteroMips + ", $t0";
                 //consecutivoTemporalEnteroMips = 1;
+                return retorno;
+            case "@":
+                retorno = "and " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
+                System.out.println("DEBUG AND: " + retorno); // ← AGREGAR ESTO
+                return retorno;
+            case "<":
+                // slt:(1si la condicion es verdad si op1 < op2, sino 0)
+                retorno = "slt " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
+                return retorno;
+            case ">":
+                    // slt:(1 si la condicion es verdad op1 > op2 sino seria 0)
+                retorno = "sgt " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
                 return retorno;
             default:
                 return "";
@@ -520,6 +571,7 @@ public class ConversionMips {
         }
     }
     
+    
     /*
         Para tener más registros para las operaciones se van a usar primero los t y luego los s. Dependiendo del número retorno el que correspoda. Del 0 al 9 van los t y del 10 al 16 van los $s
     */
@@ -589,6 +641,42 @@ public class ConversionMips {
             e.printStackTrace();
          }
     }
+
+
+    private static void copiarEtiqueta(String linea){
+        // Copiamos la misma etiqueta 
+        stringTemporal += linea + "\n";
+    }
+
+    private static void traducirSaltoIncondicional(String linea){
+        // Ejemplo: goto if_2_encabezado;
+        String etiqueta = linea.replace("goto", "").replace(";", "").trim();
+        stringTemporal += "j " + etiqueta + "\n";
+    }
+
+    private static void traducirElse(String linea){
+        stringTemporal += linea + "\n";
+    }
+    
+    // Ejemplo de lo que debería llegar "if t38 goto if_bloque1:"
+    private static void traducirSaltoCondicional(String linea){
+        String patron = "if\\s+(\\w+)\\s+goto\\s+([a-zA-Z0-9_:]+)";
+        Pattern p = Pattern.compile(patron);
+        Matcher m = p.matcher(linea);
+        
+        if(m.find()){
+            String temporal = m.group(1); 
+            String etiqueta = m.group(2).replace(":", "").replace(";", ""); // if_bloque1
+            
+            // Aqui sacamos el último temporal
+            String registro = obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips - 1);
+            
+            // Si es diferente de cero entonces salta
+            stringTemporal += "bne " + registro + ", $zero, " + etiqueta + "\n";
+        }
+    }
+
+
     
     private static String accionPrimeraLectura(String linea){
         //Primer validación: Es la declaración de una variable de la función
@@ -617,7 +705,10 @@ public class ConversionMips {
         if(linea.equals("fin principal")){
             return "Fin funcion principal";
         }
-        
+        if (linea.matches("^(if|loop|for)_.*:$")) {
+            return ""; // Ignorar etiqueta para estructuras de control
+        }
+
         //Verificar si no es un identificador
         if (linea.matches("^_?[a-zA-Z][a-zA-Z0-9_]*:$")) {
             return "Declaracion funcion";
