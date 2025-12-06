@@ -5346,14 +5346,14 @@ class CUP$parser$actions {
                 String nombreFuncion = funcionActual;
                 int cont = contadorTemporalINT - 1;
                 if(funcInt == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 funcInt = false;
                 }
 
                 if ( funcFloat == true){
-                C3D.append("\nreturn f" + cont + ";\n");
+                //C3D.append("\nreturn f" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalFLOAT++;
                 contadorFuncFLOAT++;
@@ -5362,7 +5362,7 @@ class CUP$parser$actions {
                 }
 
                 if (funcBool == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncBOOL++;
@@ -5370,7 +5370,7 @@ class CUP$parser$actions {
 
                 }
                 if (funcChar == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncCHAR++;
@@ -5378,7 +5378,7 @@ class CUP$parser$actions {
 
                 }
                 if (funcString == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncSTRING++;

@@ -1,11 +1,19 @@
-
-
+int miFunc1 є int a, int b, int c э¿
+    return a+b *c$
+?
 
 void principal є э ¿
+    
     let int a$
-    let int b$
+    a = 1$
+    let int b$ 
+    let bool boolcito$
+    let float floatcito$
+    let int c = miFunc1єa, 4, 5 э$
+    a = 1$
     a = 5 * a + b *2+5+10*5//2+a$
-  
+    b = 5+10+15 * miFunc1єa, b, 5 э$
+    boolcito = False$
 
     
 ?

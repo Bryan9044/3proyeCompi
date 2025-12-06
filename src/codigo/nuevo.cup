@@ -2900,14 +2900,14 @@ function ::=
                 String nombreFuncion = funcionActual;
                 int cont = contadorTemporalINT - 1;
                 if(funcInt == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 funcInt = false;
                 }
 
                 if ( funcFloat == true){
-                C3D.append("\nreturn f" + cont + ";\n");
+                //C3D.append("\nreturn f" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalFLOAT++;
                 contadorFuncFLOAT++;
@@ -2916,7 +2916,7 @@ function ::=
                 }
 
                 if (funcBool == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncBOOL++;
@@ -2924,7 +2924,7 @@ function ::=
 
                 }
                 if (funcChar == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncCHAR++;
@@ -2932,7 +2932,7 @@ function ::=
 
                 }
                 if (funcString == true){
-                C3D.append("\nreturn t" + cont + ";\n");
+                //C3D.append("\nreturn t" + cont + ";\n");
                 C3D.append("fin_" + nombreFuncion + ":\n");
                 contadorTemporalINT++;
                 contadorFuncSTRING++;

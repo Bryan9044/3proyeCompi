@@ -41,5 +41,12 @@ public class TablaDeVariablesMips {
     }
 
     return null;
-}
+    }
+    
+    public void sumarValorPosicionVariables(int valor){
+        for (VariableMips variable: variables) {
+            variable.posicionEnLaPila+= valor;
+        }
+        
+    }
 }

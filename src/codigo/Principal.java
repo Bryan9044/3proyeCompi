@@ -18,6 +18,7 @@ public class Principal {
         
         //JflexCup.generateFiles();
         JflexCup.probarParser(rutaTxt);
+        //ConversionMips.primeraLectura(rutaC3D);
         ConversionMips.traducirArchivoCodigoTresDirecciones(rutaC3D);
         //TraduccionMips.traducirLinea(rutaC3D);
     }
