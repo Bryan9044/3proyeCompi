@@ -3009,6 +3009,7 @@ return_statement ::= return_keyword:r delimiter
                          parser.erroresSemanticos++;
                     }
                     RESULT = null;
+                    C3D.append("return;\n");
                     
                   :}
                   |  return_keyword:r declaration_values:e delimiter

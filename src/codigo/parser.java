@@ -5541,6 +5541,7 @@ class CUP$parser$actions {
                          parser.erroresSemanticos++;
                     }
                     RESULT = null;
+                    C3D.append("return;\n");
                     
                   
               CUP$parser$result = parser.getSymbolFactory().newSymbol("return_statement",42, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);

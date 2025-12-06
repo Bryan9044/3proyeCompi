@@ -1,10 +1,11 @@
-int miFunc1 є int a, int b, int c э¿
+int miFunc1 є int a, int b, int c, int e, int f э¿
     let int d = 69$
+    return d + c$
     return a+b *c *d$
 ?
 
 void principal є э ¿
-    
+    return$
     let int a$
     a = 1$
     let int b$ 
@@ -12,13 +13,10 @@ void principal є э ¿
     let bool boolcito$
     let float floatcito$
     |let int arraycito[5] = ¿5,3?$
-    let int c = miFunc1 є a, 2, 6 э$
+    let int c = miFunc1 є 1, 2, 6, 7, 9 э$
     a = 1$
     a = 5 * a + b *2+5+10*5//2+a$
-    b = 5+10+15 * miFunc1єa, b, 5 э$
+    b = 5+10+15 * miFunc1єa, 2, 6, 7, 9 э$
     boolcito = False$
-
-    
-
-    
+    return$
 ?

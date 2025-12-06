@@ -64,6 +64,12 @@ public class ConversionMips {
                     case "Declaracion de parametro de funcion":
                         ConversionMips.declaracionParametroFuncion(linea);
                         break;
+                    case "Return vacio":
+                        ConversionMips.retornoVacio();
+                        break;
+                    case "Return con temporal":
+                        ConversionMips.retornoConValor(linea);
+                        break;
                       
                     default:
                         //System.out.println("No se detectó acción");
@@ -142,10 +148,37 @@ public class ConversionMips {
             return "Declaracion funcion";
         }
         
+        if(linea.equals("return;")){
+            return "Return vacio";
+        }
         
+        if(linea.contains("return ")){
+            return "Return con temporal";
+        }
         
         
         return "";
+    }
+    
+    private static void retornoVacio(){
+        //Agrego la linea para salir
+        stringTemporal += "li $v0, 10\n";
+        stringTemporal += "syscall\n";
+    }
+    
+    private static void retornoConValor(String linea){
+        //Buscar el temporal
+        String temporal = linea.replace("return ", "").replace(";", "").trim();
+        if(temporal.contains("t")){
+            System.out.println("Retorno con t");
+            String registroRetorno = ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips -1);
+            stringTemporal += "move $v0, " + registroRetorno + "\n";
+            stringTemporal += "lw $ra, 0($sp)\n";
+            //Devolverle a la pila la memoria de la función
+            stringTemporal += "addi $sp, $sp, " + funcionActual.cantidadMemoriaRequeridaPila + "\n"; 
+            stringTemporal += "jr $ra\n";
+            
+        }
     }
     
     /*
@@ -166,10 +199,12 @@ public class ConversionMips {
     }
     
     private static void declaracionFuncion(String linea){
+        
         consecutivoTemporalEnteroMips = 0;
         consecutivoTemporalFlotanteMips = 0;
         String nombreFuncion = linea.substring(0, linea.length() - 1);
         Funcion funcion = funciones.obtenerFuncion(nombreFuncion);
+        funcionActual = funcion;
         funcion.cantidadMemoriaRequeridaPila +=4;
         posicionMemoriaParametroDeclaracion = (funcion.cantidadMemoriaRequeridaPila) + (funcion.cantidadMemoriaParametros-4); //Ya que lo que queremos es la posición entonces al total de memoria hay que restarle 4
         
@@ -199,13 +234,14 @@ public class ConversionMips {
         Esta función no requiere pila
     */
     private static void declaracionFuncionPrincipal(){
+        
         consecutivoTemporalEnteroMips = 0;
         consecutivoTemporalFlotanteMips = 0;
         posicionActualPila = 0;
         stringTemporal += "main:\n";
         tablaDeVariablesMips = new TablaDeVariablesMips("Principal");
         Funcion funcion = funciones.obtenerFuncion("principal");
-        
+        funcionActual = funcion;
         //Colocar la cantidad de memoria que requiere
         if(funcion.cantidadMemoriaRequeridaPila > 0 ){
             stringTemporal += "sub $sp, $sp, " + funcion.cantidadMemoriaRequeridaPila + "\n";

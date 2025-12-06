@@ -7,29 +7,41 @@ data_paramInt b:
 
 data_paramInt c:
 
+data_paramInt e:
+
+data_paramInt f:
+
 t1 = 69;
 
 data_int d:
 
 d = t1;
 
-t2 = b;
+t2 = d;
 
 t3 = c;
 
-t4 = t2 * t3;
+t4 = t2 + t3;
+return t4;
 
-t5 = d;
+t5 = b;
 
-t6 = t4 * t5;
+t6 = c;
 
-t7 = a;
+t7 = t5 * t6;
 
-t8 = t7 + t6;
-return t8;
+t8 = d;
+
+t9 = t7 * t8;
+
+t10 = a;
+
+t11 = t10 + t9;
+return t11;
 fin_miFunc1:
 
 inicio principal:
+return;
 
 data_int a:
 
@@ -47,7 +59,7 @@ data_bool boolcito:
 
 data_float floatcito:
 
-t3 = a;
+t3 = 1;
 param int t3;
 
 t4 = 2;
@@ -55,78 +67,91 @@ param int t4;
 
 t5 = 6;
 param int t5;
-t6 = call miFunc1;
+
+t6 = 7;
+param int t6;
+
+t7 = 9;
+param int t7;
+t8 = call miFunc1;
 
 data_int c:
 
-c = t6;
+c = t8;
 
-t7 = 1;
+t9 = 1;
 
-a = t7;
+a = t9;
 
-t8 = 5;
+t10 = 5;
 
-t9 = a;
+t11 = a;
 
-t10 = t8 * t9;
+t12 = t10 * t11;
 
-t11 = b;
+t13 = b;
 
-t12 = 2;
+t14 = 2;
 
-t13 = t11 * t12;
+t15 = t13 * t14;
 
-t14 = t10 + t13;
+t16 = t12 + t15;
 
-t15 = 5;
+t17 = 5;
 
-t16 = t14 + t15;
+t18 = t16 + t17;
 
-t17 = 10;
+t19 = 10;
 
-t18 = 5;
+t20 = 5;
 
-t19 = t17 * t18;
+t21 = t19 * t20;
 
-t20 = 2;
+t22 = 2;
 
-t21 = t19 // t20;
+t23 = t21 // t22;
 
-t22 = t16 + t21;
+t24 = t18 + t23;
 
-t23 = a;
+t25 = a;
 
-t24 = t22 + t23;
+t26 = t24 + t25;
 
-a = t24;
+a = t26;
 
-t25 = 5;
+t27 = 5;
 
-t26 = 10;
+t28 = 10;
 
-t27 = t25 + t26;
+t29 = t27 + t28;
 
-t28 = a;
-param int t28;
-
-t29 = b;
-param int t29;
-
-t30 = 5;
+t30 = a;
 param int t30;
-t31 = call miFunc1;
 
-t32 = 15;
+t31 = 2;
+param int t31;
 
-t33 = t32 * t31;
+t32 = 6;
+param int t32;
 
-t34 = t27 + t33;
+t33 = 7;
+param int t33;
 
-b = t34;
+t34 = 9;
+param int t34;
+t35 = call miFunc1;
 
-t35 = False;
+t36 = 15;
 
-boolcito = t35;
+t37 = t36 * t35;
+
+t38 = t29 + t37;
+
+b = t38;
+
+t39 = False;
+
+boolcito = t39;
+return;
 
 fin principal
