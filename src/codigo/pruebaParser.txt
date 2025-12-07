@@ -2,28 +2,77 @@ int miFunc1 є int a, int b, int c э¿
     return a+b *c$
 ?
 
-int miFunc2 є э¿
-    output "\nEstoy en mi func2"$
-    let int a = miFunc1 є 1, 2, 3э$
-    output "\nResultado func1 desde func2: "$
-    output a$
-    return 5*4 +20$
+
+int prueba є э ¿
+    let int pp = 2$
+    let bool prueba2 = True$
+    let bool boolcito3 = False$
+    decide of
+    є boolcito3 @ prueba2 э -> ¿
+        let int yy = 1$
+    ?
+    else -> ¿
+        let int zzz = 3$
+        
+    ?
+    end decide$
+
+    return pp$
+
 ?
 
 void principal є э ¿
-   
-    output "Ingrese el valor: "$
-    let float a = 5.4$
-    input a$
-    let float floatcito = 69.999$
-    output "\nvalor de a: "$
-    output a$
     
-    let int varcita = miFunc2 є э$
-    output "\nimpresionVarcita: "$
-    output varcita$
+    let int a$
+    a = 1$
+    let int b$ 
+    let bool boolcito$
+    let float floatcito$
+    let int c = miFunc1єa, 4, 5 э$
+    a = 1$
+    a = 5 * a + b *2+5+10*5//2+a$
+    b = 5+10+15 * miFunc1єa, b, 5 э$
+    let bool boolcito2 = False$
+    let bool prueba = True$
+    decide of
+    є boolcito2 @ prueba э -> ¿
+        let int y = 1$
+    ?
+    є b > a э -> ¿
+        let int x = 2$
+        
+    ?
+    else -> ¿
+        let int z = 3$
+        
+    ?
+    end decide$
+    let int contador$
+    contador = 0$
+    loop
+        contador = contador + 1$
 
-    let int varcita2 = miFunc1є 2, 3, 6э$
-    output "\nimpresion varcita2: "$
-    output varcita2$
+        decide of
+            є contador == 1 э -> ¿
+                let int caso1 = 4$
+            ?
+            є contador == 3 э -> ¿
+                let int caso3 = 3$
+            ?
+            else -> ¿
+                let int otro = 2$
+            ?
+        end decide$
+
+    exit when contador > 5$
+    end loop$
+
+    
+    let int contador1$
+    contador1 = 0$
+    loop 
+        contador1 = contador1 + 1$
+    exit when contador1 > 3$
+    end loop$        
+    
 ?
