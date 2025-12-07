@@ -2,20 +2,28 @@ int miFunc1 є int a, int b, int c э¿
     return a+b *c$
 ?
 
+int miFunc2 є э¿
+    output "\nEstoy en mi func2"$
+    let int a = miFunc1 є 1, 2, 3э$
+    output "\nResultado func1 desde func2: "$
+    output a$
+    return 5*4 +20$
+?
+
 void principal є э ¿
-    let string stringcito$
-    let string miBombo = "miBombo"$
-    stringcito = "hola q hace"$
-    miBombo = "a"$
-    
-    output "hola"$
-    output miBombo$
-    output "viva el mostro\n"$
-    let int a = 5$
+   
+    output "Ingrese el valor: "$
+    let float a = 5.4$
     input a$
-    |output a$
-    output 5.2$
     let float floatcito = 69.999$
-    output floatcito$
-    output True$
+    output "\nvalor de a: "$
+    output a$
+    
+    let int varcita = miFunc2 є э$
+    output "\nimpresionVarcita: "$
+    output varcita$
+
+    let int varcita2 = miFunc1є 2, 3, 6э$
+    output "\nimpresion varcita2: "$
+    output varcita2$
 ?

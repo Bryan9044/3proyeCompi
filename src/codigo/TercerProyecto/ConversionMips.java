@@ -105,6 +105,9 @@ public class ConversionMips {
                     case "Output":
                         ConversionMips.output(linea);
                         break;
+                    case "Input":
+                        ConversionMips.input(linea);
+                        break;
                     default:
                         //System.out.println("No se detectó acción");
                 }
@@ -193,6 +196,10 @@ public class ConversionMips {
             return "Output";
         }
         
+        if(linea.startsWith("call input")){
+            return "Input";
+        }
+        
         if (linea.matches("^if_bloque\\d+:$")) {
             return "Etiqueta bloque";
         }
@@ -235,9 +242,29 @@ public class ConversionMips {
         return "";
     }
     
+    private static void input(String linea){
+        //Puede ser de entero o flotante
+        String[] partes = linea.split(" ", 3);
+        String imprimir = partes[2].substring(0, partes[2].length() - 1); 
+        
+         VariableMips variable = tablaDeVariablesMips.obtenerVariable(imprimir);
+            if(variable.tipo.equals("int")){
+                //Cargarla en un registro temporal
+                stringTemporal += "li $v0, 5\nsyscall\n";
+                stringTemporal += "sw $v0, " + variable.posicionEnLaPila + "($sp)#Guardar Entero\n" ;
+                return;
+            }
+            
+            if(variable.tipo.equals("float")){
+                stringTemporal += "li $v0, 6\nsyscall\n";
+                stringTemporal += "s.s $f0, " + variable.posicionEnLaPila + "($sp)#Guardar flotante\n" ;
+                return;
+            }
+    }
+    
     private static void output(String linea){
         //Puede ser output de entero, flotante, booleano o string con literales o variables
-        System.out.println("Output");
+        
         String[] partes = linea.split(" ", 3);
         String imprimir = partes[2].substring(0, partes[2].length() - 1); 
         
@@ -425,7 +452,7 @@ public class ConversionMips {
         stringTemporal += "jal " + nombre + "\n";
         
         //Luego, asignar el resultado en el próximo temporal
-        stringTemporal += "move $v0, " +ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + "\n";
+        stringTemporal += "move " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", $v0\n";
         
         //Luego debo de restar a la pila el total de memoria que requerí para los parámetros
         stringTemporal += "addi $sp, $sp, " + funciones.obtenerFuncion(nombre).cantidadMemoriaParametros + "\n";
@@ -633,7 +660,6 @@ public class ConversionMips {
         switch(operador){
             case "+":
                 retorno = "add.s " + ConversionMips.obtenerRegistroOperadorFlotante(consecutivoTemporalFlotanteMips) + ", " + operandoIzquierdo + ", " + operandoDerecho + "\n";
-                
                 consecutivoTemporalFlotanteMips++;
                 return retorno;
             case "-":
