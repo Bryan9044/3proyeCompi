@@ -41,11 +41,25 @@ call output "hola";
 
 call output miBombo;
 
+call output "viva el mostro\n";
+
+t4 = 5;
+
 data_int a:
 
-call output a;
+a = t4;
+
+call input a;
 
 call output 5.2;
+
+f1 = 69.999;
+
+data_float floatcito:
+
+floatcito = f1;
+
+call output floatcito;
 
 call output True;
 

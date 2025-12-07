@@ -10,8 +10,12 @@ void principal є э ¿
     
     output "hola"$
     output miBombo$
-    let int a$
-    output a$
+    output "viva el mostro\n"$
+    let int a = 5$
+    input a$
+    |output a$
     output 5.2$
+    let float floatcito = 69.999$
+    output floatcito$
     output True$
 ?
