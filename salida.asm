@@ -2,6 +2,7 @@
 output_0: .asciiz "ousheeet"
 prueba_stringcito_0: .asciiz "puto"
 prueba_stringcito_1: .asciiz "hola"
+output_1: .asciiz "entre al or"
 
 .text
 .globl main
@@ -122,12 +123,15 @@ sw $t0, 24($sp) #prueba
 if_2_encabezadoD2:
 lw $t0, 20($sp)
 lw $t1, 24($sp)
-
+or $t2, $t0, $t1
 bne $t2, $zero, if_bloque2D2
 j if_3_encabezadoD2
 if_bloque2D2:
 li $t3, 1
 sw $t3, 28($sp) #y
+li $v0, 4
+la $a0, output_1
+syscall
 j if_1_finD2
 if_3_encabezadoD2:
 lw $t0, 4($sp)

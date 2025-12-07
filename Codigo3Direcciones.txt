@@ -196,7 +196,7 @@ t36 = boolcito2;
 
 t37 = prueba;
 
-t38 = t36 ~ t37;
+t38 = t36 @ t37;
 if t38 goto if_bloque2D2:
 goto if_3_encabezadoD2:
 
@@ -207,6 +207,8 @@ t39 = 1;
 data_int y:
 
 y = t39;
+
+call output "entre al or";
 goto if_1_finD2:
 
 if_3_encabezadoD2:

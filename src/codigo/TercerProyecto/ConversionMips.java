@@ -439,6 +439,8 @@ public class ConversionMips {
             tablaDeVariablesMips.variables.add(new VariableMips("int", "", nombre, posicionMemoriaParametroDeclaracion));
             posicionMemoriaParametroDeclaracion += -4; //Para que tome las otras variables
         }
+        
+        
     }
     
     private static void declaracionFuncion(String linea){
@@ -729,7 +731,7 @@ public class ConversionMips {
                 System.out.println("DEBUG AND: " + retorno); // ← AGREGAR ESTO
                 return retorno;
             case "~":
-                retorno = "or " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
+                retorno = "and " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
                 System.out.println("DEBUG AND: " + retorno); // ← AGREGAR ESTO
                 return retorno;
             case "<":

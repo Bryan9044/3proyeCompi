@@ -39,8 +39,9 @@ void principal є э ¿
     let bool boolcito2 = False$
     let bool prueba = True$
     decide of
-    є boolcito2 ~ prueba э -> ¿
+    є boolcito2 @ prueba э -> ¿
         let int y = 1$
+        output "entre al or"$
     ?
     є b > a э -> ¿
         let int x = 2$
