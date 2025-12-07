@@ -2393,6 +2393,7 @@ decide_of_left ::=
 decide_of_left_and_content ::= 
                             decide_of_left left_block loop_content right_block 
                                 {: 
+                                    C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");  
                                     desapilarTablaDeSimbolos(); //Desapilo aquí que ya se habría analizado ese bloque
                                 :}
                             ;
@@ -2426,10 +2427,7 @@ decide_of ::= decide_of_left_and_content end_keyword decide_keyword delimiter
             :}
            |  decide_of_left_and_content else_part end_keyword decide_keyword delimiter
               {:
-                C3D.append("goto if_1_fin" + "D" +contadorDecide +  ":\n");
-                C3D.append("\nif_" + (encabezado + 1) + "_encabezado" + "D" + contadorDecide + ":\n");
-                
-                C3D.append("goto if_1_fin"+ "D" + contadorDecide + ":\n");
+
                 
                 C3D.append("\nif_1_fin" + "D"+ contadorDecide + ":\n");
                 
@@ -2453,7 +2451,8 @@ decide_of ::= decide_of_left_and_content end_keyword decide_keyword delimiter
 
 
 
-                
+
+
                 :}
             | decide_keyword of_keyword left_parenthesis error right_parenthesis minus_operator greater_operator left_block loop_content right_block end_keyword decide_keyword delimiter
            {: System.err.println("Error en condicion de decide of"); :}
@@ -2472,11 +2471,11 @@ elif_list ::= elif_part {:
 
 elif_helper ::= left_parenthesis:i {:
     
-    C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");
     String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
     C3D.append("\n" + etiquetaEncabezado + "D" + contadorDecide + ":\n");
     
     RESULT = String.valueOf(encabezado);
+    encabezado++;  // Incrementa aquí para el siguiente
 
 
 
@@ -2531,20 +2530,16 @@ elif_part_left ::= elif_helper logical_expresion_and:e right_parenthesis minus_o
 elif_part ::= elif_part_left left_block loop_content right_block 
            {:  
 
-            
+            C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");
             eliminarDireccionBreak();
                 desapilarTablaDeSimbolos();
             :};
             
 else_helper ::= else_keyword {:
-
-    
-    C3D.append("goto if_1_fin" + "D"+ contadorDecide + ":\n");
     String etiquetaEncabezado = "if_" + encabezado + "_encabezado" ;
     C3D.append("\n" + etiquetaEncabezado +  "D"+ contadorDecide +":\n");
     
     RESULT = String.valueOf(encabezado);
-
 :};
 
 
@@ -2608,12 +2603,14 @@ loop ::= loop_left loop_content exit_keyword when_keyword logical_expresion_and:
             }
         }
 
-        String inicio = "loop_inicio_";
+        String inicio = "loop_inicio_" + contadorLoop;
         String fin = "loop_fin_" + contadorLoop;
-        AgregarDireccion(fin + contadorLoop);
+
+        AgregarDireccion(fin);
         C3D.append("if " + valorFinal + " goto " + fin + ":\n");
-        C3D.append("goto " + inicio + contadorLoop +":\n");
-        C3D.append(fin + ":\n");        
+        C3D.append("goto " + inicio + ":\n");
+        C3D.append(fin + ":\n");
+
         contadorLoop++;
 
          

@@ -19,48 +19,315 @@ t5 = t4 + t3;
 return t5;
 fin_miFunc1:
 
+prueba:
+
+t1 = 2;
+
+data_int pp:
+
+pp = t1;
+
+t2 = True;
+
+data_bool prueba2:
+
+prueba2 = t2;
+
+t3 = False;
+
+data_bool boolcito3:
+
+boolcito3 = t3;
+
+if_1_encabezadoD1:
+
+t4 = boolcito3;
+
+t5 = prueba2;
+
+t6 = t4 @ t5;
+if t6 goto if_bloque1D1:
+goto if_2_encabezadoD1:
+
+if_bloque1D1:
+
+t7 = 1;
+
+data_int yy:
+
+yy = t7;
+goto if_1_finD1:
+
+if_2_encabezadoD1:
+
+t8 = 3;
+
+data_int zzz:
+
+zzz = t8;
+
+if_1_finD1:
+t9 = pp;
+return t9;
+
+fin_prueba:
+
 inicio principal:
-
-data_string stringcito:
-
-t1 = "miBombo";
-
-data_string miBombo:
-
-miBombo = t1;
-
-t2 = "hola q hace";
-
-stringcito = t2;
-
-t3 = "a";
-
-miBombo = t3;
-
-call output "hola";
-
-call output miBombo;
-
-call output "viva el mostro\n";
-
-t4 = 5;
 
 data_int a:
 
-a = t4;
+t1 = 1;
 
-call input a;
+a = t1;
 
-call output 5.2;
+data_int b:
 
-f1 = 69.999;
+data_bool boolcito:
 
 data_float floatcito:
 
-floatcito = f1;
+t2 = a;
+param int t2;
 
-call output floatcito;
+t3 = 4;
+param int t3;
 
-call output True;
+t4 = 5;
+param int t4;
+t5 = call miFunc1;
+
+data_int c:
+
+c = t5;
+
+t6 = 1;
+
+a = t6;
+
+t7 = 5;
+
+t8 = a;
+
+t9 = t7 * t8;
+
+t10 = b;
+
+t11 = 2;
+
+t12 = t10 * t11;
+
+t13 = t9 + t12;
+
+t14 = 5;
+
+t15 = t13 + t14;
+
+t16 = 10;
+
+t17 = 5;
+
+t18 = t16 * t17;
+
+t19 = 2;
+
+t20 = t18 // t19;
+
+t21 = t15 + t20;
+
+t22 = a;
+
+t23 = t21 + t22;
+
+a = t23;
+
+t24 = 5;
+
+t25 = 10;
+
+t26 = t24 + t25;
+
+t27 = a;
+param int t27;
+
+t28 = b;
+param int t28;
+
+t29 = 5;
+param int t29;
+t30 = call miFunc1;
+
+t31 = 15;
+
+t32 = t31 * t30;
+
+t33 = t26 + t32;
+
+b = t33;
+
+t34 = False;
+
+data_bool boolcito2:
+
+boolcito2 = t34;
+
+t35 = True;
+
+data_bool prueba:
+
+prueba = t35;
+
+if_2_encabezadoD2:
+
+t36 = boolcito2;
+
+t37 = prueba;
+
+t38 = t36 @ t37;
+if t38 goto if_bloque2D2:
+goto if_3_encabezadoD2:
+
+if_bloque2D2:
+
+t39 = 1;
+
+data_int y:
+
+y = t39;
+goto if_1_finD2:
+
+if_3_encabezadoD2:
+
+t40 = b;
+
+t41 = a;
+
+t42 = t40 > t41;
+if t42 goto if_bloque3D2:
+goto if_5_encabezadoD2:
+
+if_bloque3D2:
+
+t43 = 2;
+
+data_int x:
+
+x = t43;
+goto if_1_finD2:
+
+if_5_encabezadoD2:
+
+t44 = 3;
+
+data_int z:
+
+z = t44;
+goto if_6_encabezadoD2:
+
+if_6_encabezadoD2:
+goto if_1_finD2:
+
+if_1_finD2:
+
+data_int contador:
+
+t45 = 0;
+
+contador = t45;
+
+loop_inicio_1:
+
+t46 = contador;
+
+t47 = 1;
+
+t48 = t46 + t47;
+
+contador = t48;
+
+if_5_encabezadoD3:
+
+t49 = contador;
+
+t50 = 1;
+
+t51 = t49 == t50;
+if t51 goto if_bloque4D3:
+goto if_6_encabezadoD3:
+
+if_bloque4D3:
+
+t52 = 4;
+
+data_int caso1:
+
+caso1 = t52;
+goto if_1_finD3:
+
+if_6_encabezadoD3:
+
+t53 = contador;
+
+t54 = 3;
+
+t55 = t53 == t54;
+if t55 goto if_bloque5D3:
+goto if_1_finD3:
+
+if_bloque5D3:
+
+t56 = 3;
+
+data_int caso3:
+
+caso3 = t56;
+goto if_1_finD3:
+
+if_7_encabezadoD3:
+
+t57 = 2;
+
+data_int otro:
+
+otro = t57;
+goto if_8_encabezadoD3:
+
+if_8_encabezadoD3:
+goto if_1_finD3:
+
+if_1_finD3:
+
+t58 = contador;
+
+t59 = 5;
+
+t60 = t58 > t59;
+if t60 goto loop_fin_1:
+goto loop_inicio_1:
+loop_fin_1:
+
+data_int contador1:
+
+t61 = 0;
+
+contador1 = t61;
+
+loop_inicio_2:
+
+t62 = contador1;
+
+t63 = 1;
+
+t64 = t62 + t63;
+
+contador1 = t64;
+
+t65 = contador1;
+
+t66 = 3;
+
+t67 = t65 > t66;
+if t67 goto loop_fin_2:
+goto loop_inicio_2:
+loop_fin_2:
 
 fin principal

@@ -4558,6 +4558,7 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 		 
+                                    C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");  
                                     desapilarTablaDeSimbolos(); //Desapilo aquí que ya se habría analizado ese bloque
                                 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("decide_of_left_and_content",29, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -4608,10 +4609,7 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 		
-                C3D.append("goto if_1_fin" + "D" +contadorDecide +  ":\n");
-                C3D.append("\nif_" + (encabezado + 1) + "_encabezado" + "D" + contadorDecide + ":\n");
-                
-                C3D.append("goto if_1_fin"+ "D" + contadorDecide + ":\n");
+
                 
                 C3D.append("\nif_1_fin" + "D"+ contadorDecide + ":\n");
                 
@@ -4642,7 +4640,8 @@ class CUP$parser$actions {
 
 
 
-                
+
+
                 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("decide_of",27, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -4691,11 +4690,11 @@ class CUP$parser$actions {
 		String i = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
     
-    C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");
     String etiquetaEncabezado = "if_" + encabezado + "_encabezado";
     C3D.append("\n" + etiquetaEncabezado + "D" + contadorDecide + ":\n");
     
     RESULT = String.valueOf(encabezado);
+    encabezado++;  // Incrementa aquí para el siguiente
 
 
 
@@ -4764,7 +4763,7 @@ class CUP$parser$actions {
               Object RESULT =null;
 		  
 
-            
+            C3D.append("goto if_1_fin" + "D" + contadorDecide + ":\n");
             eliminarDireccionBreak();
                 desapilarTablaDeSimbolos();
             
@@ -4777,14 +4776,10 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 		
-
-    
-    C3D.append("goto if_1_fin" + "D"+ contadorDecide + ":\n");
     String etiquetaEncabezado = "if_" + encabezado + "_encabezado" ;
     C3D.append("\n" + etiquetaEncabezado +  "D"+ contadorDecide +":\n");
     
     RESULT = String.valueOf(encabezado);
-
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("else_helper",51, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -4876,12 +4871,14 @@ class CUP$parser$actions {
             }
         }
 
-        String inicio = "loop_inicio_";
+        String inicio = "loop_inicio_" + contadorLoop;
         String fin = "loop_fin_" + contadorLoop;
-        AgregarDireccion(fin + contadorLoop);
+
+        AgregarDireccion(fin);
         C3D.append("if " + valorFinal + " goto " + fin + ":\n");
-        C3D.append("goto " + inicio + contadorLoop +":\n");
-        C3D.append(fin + ":\n");        
+        C3D.append("goto " + inicio + ":\n");
+        C3D.append(fin + ":\n");
+
         contadorLoop++;
 
          
