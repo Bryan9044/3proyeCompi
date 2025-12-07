@@ -36,9 +36,11 @@ public class ConversionMips {
         try (Scanner lector = new Scanner(archivo)){
             while (lector.hasNextLine()) {
                 linea = lector.nextLine(); //En linea tengo almacenada la actual
+                System.out.println("linea:" +linea);
                 //System.out.println("Linea: " + linea);
                 //Llamada a función externa que me retorna una acción para realizar en el switch
                 accion = ConversionMips.accionLinea(linea);
+                System.out.println("accion:" + accion);
                 
                 //Switch para definir que hago con esa línea
                 switch(accion){
@@ -66,6 +68,19 @@ public class ConversionMips {
                     case "Declaracion de parametro de funcion":
                         ConversionMips.declaracionParametroFuncion(linea);
                         break;
+                    case "Inicio loop":
+                        ConversionMips.traducirInicioLoop(linea);
+                        break;
+                    case "Fin loop":
+                        ConversionMips.traducirFinLoop(linea);
+                        break;
+
+                    case "Condicion loop":
+                        ConversionMips.traducirCondicionloop(linea);
+                        break;
+                    case "FalloCondicion loop":
+                        ConversionMips.traducirFalloCondicionloop(linea);
+                        break;                                           
                     case "Etiqueta estructura":
                         ConversionMips.copiarEtiqueta(linea);
                         break;
@@ -180,17 +195,38 @@ public class ConversionMips {
                 return "Fin funcion";
             }
         }
-        if (linea.matches("^if_bloque\\d+:$")) {
+        
+        
+        if(linea.startsWith("loop") && linea.contains("inicio")){
+            return "Inicio loop";
+        }
+
+        if(linea.startsWith("loop") && linea.contains("fin")){
+            return "Fin loop";
+        }
+
+
+        if(linea.startsWith("if") && linea.contains("goto") && linea.contains("loop")){
+            return "Condicion loop";
+        }
+    
+        if(linea.startsWith("goto") && linea.contains("loop")){
+            return "FalloCondicion loop";
+        }
+
+        
+        
+        if (linea.matches("^if_bloque[0-9]+D[0-9]+:$")) {
             return "Etiqueta bloque";
         }
         
         // Para las etiquetas iniciales de if_1_encabezado
-        if (linea.matches("^if_\\d+_encabezado:$")) {
+        if (linea.matches("^if_\\d+_encabezadoD[0-9]+:$")) {
             return "Etiqueta encabezado";
         }
         
         // Para ejemplos con fin if_1_fin
-        if (linea.matches("^if_\\d+_fin:$")) {
+        if (linea.matches("^if_[0-9]+_finD[0-9]+:$")) {
             return "Etiqueta fin";
         }
         
@@ -796,6 +832,39 @@ public class ConversionMips {
     }
 
 
+    private static void traducirInicioLoop(String linea){
+        stringTemporal += linea + "\n";
+    }
+
+    private static void traducirFinLoop(String linea){
+        stringTemporal += linea + "\n";
+    }
+
+    private static void traducirCondicionloop(String linea){
+        String patron = "if\\s+(\\w+)\\s+goto\\s+([a-zA-Z0-9_:]+)";
+        Pattern p = Pattern.compile(patron);
+        Matcher m = p.matcher(linea); 
+
+        if(m.find()){
+            String temporal = m.group(1); 
+            String etiqueta = m.group(2).replace(":", "").replace(";", ""); 
+
+            // Aqui sacamos el último temporal
+        String registro = obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips - 1);
+            
+            // Si es diferente de cero entonces salta
+        stringTemporal += "bne " + registro + ", $zero, " + etiqueta + "\n";
+        }
+    }
+
+
+    private static void traducirFalloCondicionloop(String linea){
+        String etiqueta = linea.replace("goto", "").replace(";", "").trim();
+        stringTemporal += "j " + etiqueta + "\n";
+    }
+
+    
+    
     private static void copiarEtiqueta(String linea){
         // Copiamos la misma etiqueta 
         stringTemporal += linea + "\n";
