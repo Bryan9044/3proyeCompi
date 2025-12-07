@@ -5,6 +5,8 @@
 package codigo.TercerProyecto;
 import java.io.File;                  
 import java.io.FileNotFoundException; 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;            
 import java.util.regex.*;
@@ -30,7 +32,7 @@ public class ConversionMips {
     public static String macros ="";
     
     
-    public static void traducirArchivoCodigoTresDirecciones(String rutaC3D){
+    public static void traducirArchivoCodigoTresDirecciones(String rutaC3D, String rutaASM) throws IOException{
         File archivo = new File(rutaC3D); //Aqui tengo el archivo
         String accion;
         String linea;
@@ -120,6 +122,8 @@ public class ConversionMips {
                     case "Output":
                         ConversionMips.output(linea);
                         break;
+                    case "Input":
+                        break;
                     default:
                         //System.out.println("No se detectó acción");
                 }
@@ -128,11 +132,21 @@ public class ConversionMips {
             }
     
             String text = ".text\n.globl main";
-            System.out.println("Resultado: \n" + segmentoData + "\n"+ text + "\n"+ stringTemporal);
+            System.out.println(segmentoData + "\n"+ text + "\n"+ stringTemporal);
+            String rutaASM2 = System.getProperty("user.dir") + "/salida.asm";
+            ConversionMips.escribirEnArchivo((segmentoData + "\n"+ text + "\n"+ stringTemporal), rutaASM2);
         }catch (FileNotFoundException e) {
             System.out.println("Ocurrió un error leyendo el archivo.");
             e.printStackTrace();
          }
+    }
+    private static void escribirEnArchivo(String pEntrada, String pArchivo) {
+        try (FileWriter writer = new FileWriter(pArchivo)) { 
+            writer.write(pEntrada);
+            writer.flush(); 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /* En esta función se pretenden colocar todas las posibles acciones que se pueden llevar a cabo con las líneas del código tres direcciones
@@ -224,7 +238,11 @@ public class ConversionMips {
         if(linea.startsWith("call output")){
             return "Output";
         }
-
+        
+        if(linea.startsWith("call input")){
+            return "Input";
+        }
+        
         // Manejar etiquetas de bloques
         if (linea.matches("^if_bloque[0-9]+D?[0-9]*:$") || linea.matches("^if_bloque\\d+:$")) {
             return "Etiqueta bloque";
@@ -272,6 +290,26 @@ public class ConversionMips {
 
    
         return "";
+    }
+    
+    private static void input(String linea){
+        //Puede ser de entero o flotante
+        String[] partes = linea.split(" ", 3);
+        String imprimir = partes[2].substring(0, partes[2].length() - 1); 
+        
+         VariableMips variable = tablaDeVariablesMips.obtenerVariable(imprimir);
+            if(variable.tipo.equals("int")){
+                //Cargarla en un registro temporal
+                stringTemporal += "li $v0, 5\nsyscall\n";
+                stringTemporal += "sw $v0, " + variable.posicionEnLaPila + "($sp)#Guardar Entero\n" ;
+                return;
+            }
+            
+            if(variable.tipo.equals("float")){
+                stringTemporal += "li $v0, 6\nsyscall\n";
+                stringTemporal += "s.s $f0, " + variable.posicionEnLaPila + "($sp)#Guardar flotante\n" ;
+                return;
+            }
     }
     
     private static void output(String linea){
@@ -635,8 +673,8 @@ public class ConversionMips {
     String[] partes = linea.split("=");
 
     String derecha = partes[1].replace(";", "").trim();
-
-    return derecha.split("\\s*(//|\\+|\\-|\\*|/|%|<=|>=|==|!=|<|>|@)\\s*");
+    
+    return derecha.split("\\s*(//|\\+|\\-|\\*|/|%|<=|>=|==|!=|<|>|@|~)\\s*");
     }
     
     //Verificar si una línea es temporal t
@@ -687,7 +725,11 @@ public class ConversionMips {
                 //consecutivoTemporalEnteroMips = 1;
                 return retorno;
             case "@":
-                retorno = "and " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
+                retorno = "or " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
+                System.out.println("DEBUG AND: " + retorno); // ← AGREGAR ESTO
+                return retorno;
+            case "~":
+                retorno = "or " + ConversionMips.obtenerRegistroOperadorEntero(consecutivoTemporalEnteroMips) + ", " + operandoIzquierdo + ", " + operandoDerecho;
                 System.out.println("DEBUG AND: " + retorno); // ← AGREGAR ESTO
                 return retorno;
             case "<":

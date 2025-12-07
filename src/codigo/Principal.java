@@ -13,13 +13,13 @@ public class Principal {
         String basePath = System.getProperty("user.dir");
         String rutaTxt = basePath + "/src/codigo/pruebaParser.txt";
         String rutaC3D = basePath + "/Codigo3Direcciones.txt";
-       
+        String rutaASM = basePath + "/salida.asm";
         //"/src/codigo/ejemplo código 2.sintactico.base 3.txt"
         
         //JflexCup.generateFiles();
         JflexCup.probarParser(rutaTxt);
         //ConversionMips.primeraLectura(rutaC3D);
-        ConversionMips.traducirArchivoCodigoTresDirecciones(rutaC3D);
+        ConversionMips.traducirArchivoCodigoTresDirecciones(rutaC3D, basePath);
         //TraduccionMips.traducirLinea(rutaC3D);
     }
     

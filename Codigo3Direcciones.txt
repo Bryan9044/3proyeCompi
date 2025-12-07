@@ -19,89 +19,335 @@ t5 = t4 + t3;
 return t5;
 fin_miFunc1:
 
-miFunc2:
+prueba:
 
-call output "\nEstoy en mi func2";
+t1 = 2;
 
-t1 = 1;
-param int t1;
+data_int pp:
 
-t2 = 2;
-param int t2;
+pp = t1;
 
-t3 = 3;
-param int t3;
-t4 = call miFunc1;
+t2 = True;
 
-data_int a:
+data_bool prueba2:
 
-a = t4;
+prueba2 = t2;
 
-call output "\nResultado func1 desde func2: ";
+t3 = False;
 
-call output a;
+data_bool boolcito3:
 
-t5 = 5;
+boolcito3 = t3;
 
-t6 = 4;
+call output "ousheeet";
 
-t7 = t5 * t6;
+t4 = "puto";
 
-t8 = 20;
+data_string stringcito:
 
-t9 = t7 + t8;
-return t9;
+stringcito = t4;
 
-fin_miFunc2:
+t5 = "hola";
+
+stringcito = t5;
+
+call output stringcito;
+
+if_1_encabezadoD1:
+
+t6 = boolcito3;
+
+t7 = prueba2;
+
+t8 = t6 @ t7;
+if t8 goto if_bloque1D1:
+goto if_2_encabezadoD1:
+
+if_bloque1D1:
+
+t9 = 1;
+
+data_int yy:
+
+yy = t9;
+goto if_1_finD1:
+
+if_2_encabezadoD1:
+
+t10 = 3;
+
+data_int zzz:
+
+zzz = t10;
+
+if_1_finD1:
+t11 = pp;
+return t11;
+
+fin_prueba:
 
 inicio principal:
 
-call output "Ingrese el valor: ";
+data_int a:
 
-f1 = 5.4;
+t1 = 1;
 
-data_float a:
+a = t1;
 
-a = f1;
+data_int b:
 
-call input a;
-
-f2 = 69.999;
+data_bool boolcito:
 
 data_float floatcito:
 
-floatcito = f2;
-
-call output "\nvalor de a: ";
-
-call output a;
-
-t1 = call miFunc2;
-
-data_int varcita:
-
-varcita = t1;
-
-call output "\nimpresionVarcita: ";
-
-call output varcita;
-
-t2 = 2;
+t2 = a;
 param int t2;
 
-t3 = 3;
+t3 = 4;
 param int t3;
 
-t4 = 6;
+t4 = 5;
 param int t4;
 t5 = call miFunc1;
 
-data_int varcita2:
+data_int c:
 
-varcita2 = t5;
+c = t5;
 
-call output "\nimpresion varcita2: ";
+t6 = 1;
 
-call output varcita2;
+a = t6;
+
+t7 = 5;
+
+t8 = a;
+
+t9 = t7 * t8;
+
+t10 = b;
+
+t11 = 2;
+
+t12 = t10 * t11;
+
+t13 = t9 + t12;
+
+t14 = 5;
+
+t15 = t13 + t14;
+
+t16 = 10;
+
+t17 = 5;
+
+t18 = t16 * t17;
+
+t19 = 2;
+
+t20 = t18 // t19;
+
+t21 = t15 + t20;
+
+t22 = a;
+
+t23 = t21 + t22;
+
+a = t23;
+
+t24 = 5;
+
+t25 = 10;
+
+t26 = t24 + t25;
+
+t27 = a;
+param int t27;
+
+t28 = b;
+param int t28;
+
+t29 = 5;
+param int t29;
+t30 = call miFunc1;
+
+t31 = 15;
+
+t32 = t31 * t30;
+
+t33 = t26 + t32;
+
+b = t33;
+
+t34 = False;
+
+data_bool boolcito2:
+
+boolcito2 = t34;
+
+t35 = True;
+
+data_bool prueba:
+
+prueba = t35;
+
+if_2_encabezadoD2:
+
+t36 = boolcito2;
+
+t37 = prueba;
+
+t38 = t36 ~ t37;
+if t38 goto if_bloque2D2:
+goto if_3_encabezadoD2:
+
+if_bloque2D2:
+
+t39 = 1;
+
+data_int y:
+
+y = t39;
+goto if_1_finD2:
+
+if_3_encabezadoD2:
+
+t40 = b;
+
+t41 = a;
+
+t42 = t40 > t41;
+if t42 goto if_bloque3D2:
+goto if_5_encabezadoD2:
+
+if_bloque3D2:
+
+t43 = 2;
+
+data_int x:
+
+x = t43;
+goto if_1_finD2:
+
+if_5_encabezadoD2:
+
+t44 = 3;
+
+data_int z:
+
+z = t44;
+goto if_6_encabezadoD2:
+
+if_6_encabezadoD2:
+goto if_1_finD2:
+
+if_1_finD2:
+
+t45 = call prueba;
+
+data_int asrasdas:
+
+asrasdas = t45;
+
+data_int contador:
+
+t46 = 0;
+
+contador = t46;
+
+loop_inicio_1:
+
+t47 = contador;
+
+t48 = 1;
+
+t49 = t47 + t48;
+
+contador = t49;
+
+if_5_encabezadoD3:
+
+t50 = contador;
+
+t51 = 1;
+
+t52 = t50 == t51;
+if t52 goto if_bloque4D3:
+goto if_6_encabezadoD3:
+
+if_bloque4D3:
+
+t53 = 4;
+
+data_int caso1:
+
+caso1 = t53;
+goto if_1_finD3:
+
+if_6_encabezadoD3:
+
+t54 = contador;
+
+t55 = 3;
+
+t56 = t54 == t55;
+if t56 goto if_bloque5D3:
+goto if_1_finD3:
+
+if_bloque5D3:
+
+t57 = 3;
+
+data_int caso3:
+
+caso3 = t57;
+goto if_1_finD3:
+
+if_7_encabezadoD3:
+
+t58 = 2;
+
+data_int otro:
+
+otro = t58;
+goto if_8_encabezadoD3:
+
+if_8_encabezadoD3:
+goto if_1_finD3:
+
+if_1_finD3:
+
+t59 = contador;
+
+t60 = 5;
+
+t61 = t59 > t60;
+if t61 goto loop_fin_1:
+goto loop_inicio_1:
+loop_fin_1:
+
+data_int contador1:
+
+t62 = 0;
+
+contador1 = t62;
+
+loop_inicio_2:
+
+t63 = contador1;
+
+t64 = 1;
+
+t65 = t63 + t64;
+
+contador1 = t65;
+
+t66 = contador1;
+
+t67 = 3;
+
+t68 = t66 > t67;
+if t68 goto loop_fin_2:
+goto loop_inicio_2:
+loop_fin_2:
 
 fin principal
