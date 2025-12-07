@@ -13,6 +13,7 @@ import java.util.regex.*;
  * @author dylan
  */
 public class ConversionMips {
+    public static int stringOutput = 0;
     public static int posicionMemoriaParametroDeclaracion = 0;
     public static ListaFunciones funciones = new ListaFunciones();
     public static Funcion funcionActual;
@@ -26,6 +27,8 @@ public class ConversionMips {
     public static String stringTemporal = "";
     public static String segmentoData = ".data\n";
     public static String stringAsignacion = "";
+    public static String macros ="";
+    
     
     public static void traducirArchivoCodigoTresDirecciones(String rutaC3D){
         File archivo = new File(rutaC3D); //Aqui tengo el archivo
@@ -114,13 +117,18 @@ public class ConversionMips {
                     case "Fin funcion principal":
                         ConversionMips.finFuncionPrincipal();
                         break;
+                    case "Output":
+                        ConversionMips.output(linea);
+                        break;
                     default:
                         //System.out.println("No se detectó acción");
                 }
                 
                 //System.out.println(linea);
             }
-            System.out.println("Resultado: \n" + segmentoData + "\n"+ stringTemporal);
+    
+            String text = ".text\n.globl main";
+            System.out.println("Resultado: \n" + segmentoData + "\n"+ text + "\n"+ stringTemporal);
         }catch (FileNotFoundException e) {
             System.out.println("Ocurrió un error leyendo el archivo.");
             e.printStackTrace();
@@ -196,7 +204,7 @@ public class ConversionMips {
             }
         }
         
-        
+                
         if(linea.startsWith("loop") && linea.contains("inicio")){
             return "Inicio loop";
         }
@@ -205,13 +213,21 @@ public class ConversionMips {
             return "Fin loop";
         }
 
-
         if(linea.startsWith("if") && linea.contains("goto") && linea.contains("loop")){
             return "Condicion loop";
         }
-    
+
         if(linea.startsWith("goto") && linea.contains("loop")){
             return "FalloCondicion loop";
+        }
+
+        if(linea.startsWith("call output")){
+            return "Output";
+        }
+
+        // Manejar etiquetas de bloques
+        if (linea.matches("^if_bloque[0-9]+D?[0-9]*:$") || linea.matches("^if_bloque\\d+:$")) {
+            return "Etiqueta bloque";
         }
 
         
@@ -256,6 +272,83 @@ public class ConversionMips {
 
    
         return "";
+    }
+    
+    private static void output(String linea){
+        //Puede ser output de entero, flotante, booleano o string con literales o variables
+        System.out.println("Output");
+        String[] partes = linea.split(" ", 3);
+        String imprimir = partes[2].substring(0, partes[2].length() - 1); 
+        
+        //Tengo que ver los casos
+        if (imprimir.equals("True")) {
+            stringTemporal += "li $v0, 1\n";
+            stringTemporal += "li $a0, 1\nsyscall\n";
+            return;
+
+        }
+         if (imprimir.equals("False")) {
+            stringTemporal += "li $v0, 1\n";
+            stringTemporal += "li $a0, 0\nsyscall\n";
+            return;
+        }
+         if (imprimir.matches("-?[0-9]+")) {
+            stringTemporal += "li $v0, 1\n";
+            stringTemporal += "li $a0, " + imprimir +"\n"; 
+            stringTemporal += "syscall\n";
+            return;
+        }
+         if (imprimir.matches("-?[0-9]+\\.[0-9]+")) {
+            stringTemporal += "li $v0, 2\n";
+            stringTemporal += "li.s $f12, " + imprimir +"\n"; 
+            stringTemporal += "syscall\n";
+            return;
+        }
+         String s = imprimir.trim();
+         System.out.println("Imprimir: " + s);
+         if (s.matches("^\".*\"$")) {
+            // String literal entre comillas
+            segmentoData += "output_" + stringOutput + ": .asciiz " + imprimir + "\n";
+            stringTemporal += "li $v0, 4\n";
+            stringTemporal += "la $a0, output_" + stringOutput + "\n";
+            stringTemporal += "syscall\n";
+            stringOutput++;
+            return;
+        }
+        if (imprimir.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+          
+            VariableMips variable = tablaDeVariablesMips.obtenerVariable(imprimir);
+            if(variable.tipo.equals("int")){
+                //Cargarla en un registro temporal
+                stringTemporal += "li $v0, 1\n";
+                stringTemporal += "lw $a0, " + variable.posicionEnLaPila + "($sp)\nsyscall #Impresion Entero\n" ;
+                return;
+            }
+            
+            if(variable.tipo.equals("float")){
+                stringTemporal += "li $v0, 2\n";
+                stringTemporal += "l.s $f12, " + variable.posicionEnLaPila + "($sp)\nsyscall #Impresion Entero\n";
+                return;
+            }
+            
+            if(variable.tipo.equals("string")){
+                VariableMipsString vStr = (VariableMipsString) variable;
+                stringTemporal += "li $v0, 4\n";
+                stringTemporal += "la $a0, " + vStr.etiqueta + "\n";
+                stringTemporal += "syscall\n";
+                return;
+            }
+            
+            if(variable.tipo.equals("bool")){
+                stringTemporal += "li $v0, 1\n";
+                stringTemporal += "lw $a0, " + variable.posicionEnLaPila + "($sp)\nsyscall #Impresion bool\n" ;
+                return;
+            }
+            
+            return;
+            
+        }
+        
     }
     
     private static void finFuncionPrincipal(){
@@ -740,6 +833,7 @@ public class ConversionMips {
                     //Hay que crear una etiqueta para el .data
                     VariableMipsString vStr = (VariableMipsString) variable;
                     segmentoData += funcionActual.nombre + "_" + variable.nombre + "_" + vStr.version + ": .asciiz \"" + stringAsignacion + "\"\n";
+                    vStr.etiqueta = funcionActual.nombre + "_" + variable.nombre + "_" + vStr.version;
                     vStr.version++;
                     
                 }if(!(variable.tipo.equals("string"))){
