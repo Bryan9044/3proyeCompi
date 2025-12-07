@@ -21,188 +21,32 @@ fin_miFunc1:
 
 inicio principal:
 
-f1 = 3.2;
+data_string stringcito:
 
-data_float miBombo:
+t1 = "miBombo";
 
-miBombo = f1;
+data_string miBombo:
 
-f2 = 3.3;
+miBombo = t1;
 
-f3 = miBombo;
+t2 = "hola q hace";
 
-f4 = f2 * f3;
+stringcito = t2;
 
-f5 = f4;
+t3 = "a";
 
-f6 = 4.1;
+miBombo = t3;
 
-f7 = f5 / f6;
+call output "hola";
 
-f8 = 5.2;
-
-f9 = f7;
-
-f10 = f8 + f9;
-
-f11 = f10;
-
-data_float flotancito:
-
-flotancito = f11;
+call output miBombo;
 
 data_int a:
 
-t1 = 1;
+call output a;
 
-a = t1;
+call output 5.2;
 
-data_int b:
-
-data_bool boolcito:
-
-data_float floatcito:
-
-t2 = a;
-param int t2;
-
-t3 = 4;
-param int t3;
-
-t4 = 5;
-param int t4;
-t5 = call miFunc1;
-
-data_int c:
-
-c = t5;
-
-t6 = 1;
-
-a = t6;
-
-t7 = 5;
-
-t8 = a;
-
-t9 = t7 * t8;
-
-t10 = b;
-
-t11 = 2;
-
-t12 = t10 * t11;
-
-t13 = t9 + t12;
-
-t14 = 5;
-
-t15 = t13 + t14;
-
-t16 = 10;
-
-t17 = 5;
-
-t18 = t16 * t17;
-
-t19 = 2;
-
-t20 = t18 // t19;
-
-t21 = t15 + t20;
-
-t22 = a;
-
-t23 = t21 + t22;
-
-a = t23;
-
-t24 = 5;
-
-t25 = 10;
-
-t26 = t24 + t25;
-
-t27 = a;
-param int t27;
-
-t28 = b;
-param int t28;
-
-t29 = 5;
-param int t29;
-t30 = call miFunc1;
-
-t31 = 15;
-
-t32 = t31 * t30;
-
-t33 = t26 + t32;
-
-b = t33;
-
-t34 = False;
-
-data_bool boolcito2:
-
-boolcito2 = t34;
-
-t35 = True;
-
-data_bool prueba:
-
-prueba = t35;
-
-if_1_encabezado:
-
-t36 = boolcito2;
-
-t37 = prueba;
-
-t38 = t36 @ t37;
-if t38 goto if_bloque1:
-goto if_2_encabezado;
-
-if_bloque1:
-
-t39 = 1;
-
-data_int y:
-
-y = t39;
-goto if_1_fin;
-
-if_2_encabezado:
-
-t40 = b;
-
-t41 = a;
-
-t42 = t40 > t41;
-if t42 goto if_bloque2;
-goto if_3_encabezado;
-
-if_bloque2:
-
-t43 = 2;
-
-data_int x:
-
-x = t43;
-goto if_1_fin;
-
-if_3_encabezado:
-
-t44 = 3;
-
-data_int z:
-
-z = t44;
-goto if_4_encabezado;
-
-if_4_encabezado:
-goto if_1_fin;
-
-if_1_fin:
+call output True;
 
 fin principal

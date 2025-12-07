@@ -3,33 +3,15 @@ int miFunc1 є int a, int b, int c э¿
 ?
 
 void principal є э ¿
-    let float miBombo = 5.2$
-    let float flotancito = 5.2+3.3*miBombo/4.15.4$
-
+    let string stringcito$
+    let string miBombo = "miBombo"$
+    stringcito = "hola q hace"$
+    miBombo = "a"$
+    
+    output "hola"$
+    output miBombo$
     let int a$
-    a = 1$
-    let int b$ 
-    let bool boolcito$
-    let float floatcito$
-    let int c = miFunc1єa, 4, 5 э$
-    a = 1$
-    a = 5 * a + b *2+5+10*5//2+a$
-    b = 5+10+15 * miFunc1єa, b, 5 э$
-    let bool boolcito2 = False$
-    let bool prueba = True$
-    decide of
-    є boolcito2 @ prueba э -> ¿
-        let int y = 1$
-    ?
-    є b > a э -> ¿
-        let int x = 2$
-        
-    ?
-    else -> ¿
-        let int z = 3$
-        
-    ?
-    end decide$
-    
-    
+    output a$
+    output 5.2$
+    output True$
 ?

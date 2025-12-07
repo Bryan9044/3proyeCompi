@@ -24,6 +24,8 @@ public class ConversionMips {
     public static int posicionActualPila = 0; //Me indica en cual posición agregaría algo, comienza de cero y después de usarlo lo aumento
     public static int bytesPila = 0; //Me indica cuanta cantidad de bytes debo reservar al principio de la función y luego sacarlos de la pila
     public static String stringTemporal = "";
+    public static String segmentoData = ".data\n";
+    public static String stringAsignacion = "";
     
     public static void traducirArchivoCodigoTresDirecciones(String rutaC3D){
         File archivo = new File(rutaC3D); //Aqui tengo el archivo
@@ -103,7 +105,7 @@ public class ConversionMips {
                 
                 //System.out.println(linea);
             }
-            System.out.println("Resultado: " + stringTemporal);
+            System.out.println("Resultado: \n" + segmentoData + "\n"+ stringTemporal);
         }catch (FileNotFoundException e) {
             System.out.println("Ocurrió un error leyendo el archivo.");
             e.printStackTrace();
@@ -602,7 +604,11 @@ public class ConversionMips {
         }
         
         //Falta ver string, char y los array
-        
+        if(linea.startsWith("data_string")){
+            nombre = linea.replace("data_string", "").replace(":", "").trim();
+            tablaDeVariablesMips.variables.add(new VariableMipsString("string", "", nombre, 0, "")); //Guardo, de momento el valor es vacío porque hasta después se le asigna
+            
+        }
     }
     
     /*
@@ -635,6 +641,12 @@ public class ConversionMips {
                 temporalesTresDirecciones.temporales.add(new Temporal("bool", String.valueOf(parteDerecha), parteIzquierda)); //Para saber el valor de los temporales por las listas
                 return;
             }
+            //Caso donde la parte derecha es un string
+            if (parteDerecha.matches("^\"[^\"]*\"$")) {
+                stringAsignacion = parteDerecha.substring(1, parteDerecha.length() - 1); // sin comillas. Lo guardo para usarlo después cuando se asigne el valor a la etiqueta
+                return;
+            }
+            
             //Caso donde la parte derecha es un identificador
             if(parteDerecha.matches("^_?[a-zA-Z][a-zA-Z0-9_]*$")){
                 //Hay que hacer la descarga al temporal de la pila
@@ -688,10 +700,18 @@ public class ConversionMips {
             if(ConversionMips.esTemporalT(parteDerecha)){
                 //Hay que hacer la carga del valor
                 VariableMips variable = tablaDeVariablesMips.obtenerVariable(parteIzquierda);
-                resultado = "sw " + ConversionMips.obtenerRegistroOperadorEntero((consecutivoTemporalEnteroMips-1)) + ", " + variable.posicionEnLaPila + "($sp) #" + variable.nombre;
-                consecutivoTemporalEnteroMips = 0; //Se reinicia el consecutivo 
-                stringTemporal += resultado + "\n";
-                return;
+                if(variable.tipo.equals("string")){
+                    //Hay que crear una etiqueta para el .data
+                    VariableMipsString vStr = (VariableMipsString) variable;
+                    segmentoData += funcionActual.nombre + "_" + variable.nombre + "_" + vStr.version + ": .asciiz \"" + stringAsignacion + "\"\n";
+                    vStr.version++;
+                    
+                }if(!(variable.tipo.equals("string"))){
+                    resultado = "sw " + ConversionMips.obtenerRegistroOperadorEntero((consecutivoTemporalEnteroMips-1)) + ", " + variable.posicionEnLaPila + "($sp) #" + variable.nombre;
+                    consecutivoTemporalEnteroMips = 0; //Se reinicia el consecutivo 
+                    stringTemporal += resultado + "\n";
+                    return;
+                }
                 
             }
             if(ConversionMips.esTemporalF(parteDerecha)){
